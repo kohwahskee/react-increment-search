@@ -1,0 +1,90 @@
+:root {
+  --color-dark-blue: #10101C;
+  --color-blue: #81D1FF;
+}
+
+@font-face {
+  font-family: 'AnonymousPro';
+  src: url('./assets/Fonts/AnonymousPro-Regular.ttf');
+}
+
+.App {
+  position: relative;
+  height: 100vh;
+  background-color: var(--color-dark-blue);
+  overflow: hidden;
+}
+
+.bubble-decor {
+  width: 100%;
+  position: absolute;
+  user-select: none;
+}
+
+#bubble3 {
+  bottom: -10%;
+}
+
+#bubble4 {
+  right: -10%;
+  top: -5%;
+}
+
+#bubble2 {
+  left: -10%;
+  bottom: -10%;
+}
+
+.darken-bg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.darken-bg.visible {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.input-container {
+  position: relative;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: transparent;
+  color: white;
+  font-size: 3rem;
+  font-family: 'AnonymousPro';
+  text-align: center;
+  width: 80%;
+  height: 10rem;
+  padding: 3rem;
+  backdrop-filter: blur(50px);
+  border-radius: .5rem;
+  box-shadow: 2px 9px 10px 1px rgba(0, 0, 0, 0.05);
+}
+
+.input-container input {
+  width: 80%;
+}
+
+/* .input-container input::placeholder {
+  color: white;
+} */
+
+.input-container>* {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.text-container {
+  max-width: 80%;
+  user-select: none;
+  pointer-events: none;
+  overflow-x: auto;
+}
+
+input::selection {
+  background-color: var(--color-blue);
+}
