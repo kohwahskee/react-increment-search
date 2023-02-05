@@ -1,4 +1,4 @@
-import './App.css';
+import './App.scss';
 import './reset.css';
 
 import Bubble1 from './assets/Bubble 1.svg';
@@ -10,7 +10,8 @@ import HandIcon from './assets/HandIcon.svg';
 import IndicatorBubble from './assets/IndicatorBubble.svg';
 import SmallIndicatorBubble from './assets/SmallIndicatorBubble.svg';
 
-import SearchInput from './SearchInput';
+import SearchInput from './components/SearchInput';
+import RichInput from './components/RichInput';
 
 function App() {
 	return (
@@ -38,8 +39,7 @@ function App() {
 				/>
 				<div className='darken-bg' />
 			</div>
-
-			<SearchInput />
+			<RichInput />
 		</div>
 	);
 }

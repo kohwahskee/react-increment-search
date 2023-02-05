@@ -49,6 +49,8 @@
 		"no-plusplus": "off",
 		"no-unused-vars": "off",
 		"@typescript-eslint/no-unused-vars": ["error"],
-		"prefer-destructuring": "warn"
+		"@typescript-eslint/no-use-before-define": "off",
+		"prefer-destructuring": "warn",
+		"import/no-extraneous-dependencies": "off"
 	}
 }

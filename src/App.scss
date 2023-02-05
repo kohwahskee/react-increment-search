@@ -1,0 +1,69 @@
+:root {
+  --color-dark-blue: #10101C;
+  --color-blue: #81D1FF;
+}
+
+@font-face {
+  font-family: 'AnonymousPro';
+  src: url('./assets/Fonts/AnonymousPro-Regular.ttf');
+}
+
+.App {
+  position: relative;
+  height: 100vh;
+  background-color: var(--color-dark-blue);
+  overflow: hidden;
+}
+
+.bubble-decor {
+  width: 100%;
+  position: absolute;
+  user-select: none;
+}
+
+#bubble1 {
+  animation: bubbleUpAndDown 3s 3s ease-in-out infinite;
+}
+
+#bubble2 {
+  left: -10%;
+  bottom: -10%;
+  animation: bubbleUpAndDown 5s 6s ease-in-out infinite;
+}
+
+#bubble3 {
+  bottom: -10%;
+  animation: bubbleUpAndDown 7s 2s ease-in-out infinite;
+}
+
+#bubble4 {
+  right: -10%;
+  top: -5%;
+  animation: bubbleUpAndDown 4s 0s ease-in-out infinite;
+}
+
+.darken-bg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  animation: bubbleUpAndDown 5s 6s ease-in-out infinite;
+}
+
+.darken-bg.visible {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+
+@keyframes bubbleUpAndDown {
+  0% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10%);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
