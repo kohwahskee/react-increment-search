@@ -14,11 +14,12 @@
   height: 100%;
   margin-left: auto;
   margin-right: auto;
-  // outline: 1px solid white;
+  outline: 1px solid green;
   position: relative;
   text-align: center;
-  font-size: 3rem;
+  // font-size: 3rem;
   cursor: text;
+  word-break: break-all;
 }
 
 .rich-input,
@@ -48,17 +49,18 @@
   user-select: none;
   z-index: 0;
 
-  // span[data-isnumber='true'] {
-  //   pointer-events: none;
-  //   cursor: grab;
-  // }
+  span[data-isnumber='true'] {
+    outline: 1px solid red;
+  }
+
+  outline: 1px solid blue;
 }
 
 #indicator-bubble {
   position: absolute;
-  transform: translate(-70%, -50%);
+  transform: translate(0, -50%);
   inset: 0;
   cursor: grab !important;
-  z-index: 0;
-  // outline: 1px white solid; 
+  z-index: -100;
+  outline: 1px white solid;
 }

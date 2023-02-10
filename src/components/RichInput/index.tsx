@@ -1,20 +1,19 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
-import './style-richInput.scss';
+import './style.scss';
 import { useTransition } from '@react-spring/web';
-import IndicatorBubbble from '../assets/IndicatorBubble.svg';
+import IndicatorBubbble from '../../assets/IndicatorBubble.svg';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { v4 as uuidv4 } from 'uuid';
-import { findDOMNode } from 'react-dom';
 
 export default function RichInput() {
 	const INPUT_PLACEHOLDER = 'Search...';
 	const [input, setInput] = useState<JSX.Element[]>([]);
 	const bubbleIndicatorRef = useRef<HTMLImageElement>(null);
-	const [numberInputSpans, setNumberInputSpans] = useState<Element[]>([]);
+	const [numberInputSpans, setNumberInputSpans] = useState<HTMLSpanElement[]>([]);
 	const [bubbleIndicator, setBubbleIndicator] = useState({
 		top: 0,
 		left: 0,
-		width: 0,
+		width: 1,
 		visible: false,
 	});
 	const inputRef = useRef<HTMLDivElement>(null);
@@ -36,7 +35,7 @@ export default function RichInput() {
 		}
 
 		const wordsSpan = text.split(' ').map((word) => {
-			const isNumber = !isNaN(parseInt(word));
+			const isNumber = word.match(/^\d+\s*$/g)?.length === 1;
 			return (
 				<span
 					data-isnumber={isNumber}
@@ -60,31 +59,39 @@ export default function RichInput() {
 	}, [input]);
 
 	useEffect(() => {
+		// Reset bubble indicator
 		if (numberInputSpans.length === 0) {
-			setBubbleIndicator({
+			setBubbleIndicator((prev) => ({
+				...prev,
 				top: 0,
 				left: 0,
-				width: 0,
 				visible: false,
-			});
+			}));
 			return;
 		}
 
+		// FIXME: Width is currently being updated at the same time as the position
+		// causing the bubble to  be off center. Need to update the position after the width is updated
+		// TODO: Make width the same as span's width then convert to vw to make it responsive
 		const lastSpan = numberInputSpans[numberInputSpans.length - 1];
 		const spanRect = lastSpan.getBoundingClientRect();
 		const parentRect = bubbleIndicatorRef.current?.parentElement?.getBoundingClientRect();
-
+		const bubbleRect = bubbleIndicatorRef.current?.getBoundingClientRect();
 		if (!parentRect) return;
 
-		const { width } = spanRect;
-		const top = spanRect.y - parentRect?.y + spanRect.height / 2;
-		const left = spanRect.x - parentRect?.x + spanRect.width / 2;
-		// const width = spanRect.width;
+		const splitSpan = lastSpan.innerText?.split('') || [];
+		const onlyNumbers = splitSpan.filter((char) => !isNaN(parseInt(char)));
+		const realWidth = (spanRect.width / splitSpan?.length) * onlyNumbers.length;
+		const bubbleWidth = bubbleRect?.width || 0;
+
+		const top = ((spanRect.y - parentRect?.y + spanRect?.height / 2) / parentRect.height) * 100;
+		const left =
+			((spanRect.x - parentRect?.x + realWidth / 2 - bubbleWidth / 2) / parentRect.width) * 100;
 
 		setBubbleIndicator({
 			top,
 			left,
-			width: 0,
+			width: onlyNumbers.length,
 			visible: true,
 		});
 	}, [numberInputSpans]);
@@ -96,17 +103,6 @@ export default function RichInput() {
 					inputRef.current?.focus();
 				}}
 				className='text-container'>
-				<img
-					ref={bubbleIndicatorRef}
-					style={{
-						opacity: bubbleIndicator.visible ? 1 : 0,
-						top: bubbleIndicator.top,
-						left: bubbleIndicator.left + bubbleIndicator.width,
-					}}
-					src={IndicatorBubbble}
-					alt='Indicator Bubble'
-					id='indicator-bubble'
-				/>
 				<span
 					style={{
 						color: input?.length === 0 ? 'rgba(255,255,255,.5)' : 'transparent',
@@ -133,6 +129,18 @@ export default function RichInput() {
 					suppressContentEditableWarning
 				/>
 			</div>
+			<img
+				ref={bubbleIndicatorRef}
+				style={{
+					opacity: bubbleIndicator.visible ? 1 : 0,
+					top: bubbleIndicator.top + '%',
+					left: bubbleIndicator.left + '%',
+					width: bubbleIndicator.width * 3.5 + 'vw',
+				}}
+				src={IndicatorBubbble}
+				alt='Indicator Bubble'
+				id='indicator-bubble'
+			/>
 		</div>
 	);
 }
