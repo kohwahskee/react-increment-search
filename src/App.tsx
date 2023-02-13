@@ -11,7 +11,7 @@ import IndicatorBubble from './assets/IndicatorBubble.svg';
 import SmallIndicatorBubble from './assets/SmallIndicatorBubble.svg';
 
 import SearchInput from './components/SearchInput';
-import RichInput from './components/RichInput';
+import RichInput from './components/RichInput/RichInput';
 
 function App() {
 	return (
