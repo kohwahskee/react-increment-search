@@ -16,6 +16,7 @@
   }
 }
 
+
 .text-container {
   position: relative;
   width: 100%;
@@ -24,9 +25,12 @@
   margin-right: auto;
   // outline: 1px solid green;
   text-align: center;
-  // font-size: 3rem;
   cursor: text;
   word-break: break-word;
+
+  .selecting {
+    pointer-events: none;
+  }
 }
 
 .rich-input,
@@ -56,8 +60,16 @@
   user-select: none;
   z-index: 0;
 
+  span {
+    .selecting {
+      pointer-events: auto;
+    }
+  }
+
   span[data-isnumber='true'] {
-    // outline: 1px solid red;
+    .selecting {
+      pointer-events: none;
+    }
   }
 
   // outline: 1px solid blue;

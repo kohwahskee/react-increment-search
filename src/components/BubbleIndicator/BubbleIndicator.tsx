@@ -57,16 +57,17 @@ export default function BubbleIndicator({ numberInputSpans, inputState }: Props)
 	const svgNewHeight = SVG_DEFAULT_HEIGHT + EXTRA_HEIGHT;
 
 	useEffect(() => {
-		if (inputState === 'selecting') updateBubble();
+		if (inputState === 'selecting')
+			dispatchBubbleState({ type: 'setMultiple', payload: getBubbleState() });
 		else dispatchBubbleState({ type: 'setBubbleVisiblity', payload: false });
 	}, [inputState]);
 
 	useLayoutEffect(() => {
-		updateBubble();
+		dispatchBubbleState({ type: 'setMultiple', payload: getBubbleState() });
 	}, [bubbleState.height, bubbleState.length]);
 
-	function updateBubble() {
-		if (numberInputSpans.length === 0) return;
+	function getBubbleState(): BubbleState {
+		if (numberInputSpans.length === 0) return bubbleState;
 		const lastNumberSpan = numberInputSpans[numberInputSpans.length - 1];
 		const spanRect = lastNumberSpan.getBoundingClientRect();
 		const parentRect = bubbleIndicatorRef.current?.parentElement?.getBoundingClientRect();
@@ -75,24 +76,22 @@ export default function BubbleIndicator({ numberInputSpans, inputState }: Props)
 		const realWidth = (spanRect.width / spanList?.length) * spanWithNumbers.length; // To get the width of the numbers only
 		const bubbleWidth = bubbleIndicatorRef.current?.getBoundingClientRect().width || 0;
 
-		if (!parentRect) return;
+		if (!parentRect) return bubbleState;
 		const top = ((spanRect.y - parentRect?.y + spanRect?.height / 2) / parentRect.height) * 100;
 		const left =
 			((spanRect.x - parentRect?.x + realWidth / 2 - bubbleWidth / 2) / parentRect.width) * 100;
 
-		dispatchBubbleState({
-			type: 'setMultiple',
-			payload: {
-				top,
-				left,
-				visible: true,
-				height: spanRect.height,
-				length: -17 + 20 * (spanWithNumbers.length - 1),
-			},
-		});
+		return {
+			top,
+			left,
+			visible: true,
+			height: spanRect.height,
+			length: -17 + 20 * (spanWithNumbers.length - 1),
+		};
 	}
 	return (
 		<svg
+			onClick={() => console.log('clicked')}
 			style={{
 				top: `${bubbleState.top}%`,
 				left: `${bubbleState.left}%`,
