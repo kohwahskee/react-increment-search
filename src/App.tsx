@@ -1,19 +1,19 @@
 import './App.scss';
 import './reset.css';
-
+import { useState } from 'react';
 import Bubble1 from './assets/Bubble 1.svg';
 import Bubble2 from './assets/Bubble 2.svg';
 import Bubble3 from './assets/Bubble 3.svg';
 import Bubble4 from './assets/Bubble 4.svg';
-import EnterIcon from './assets/EnterIcon.svg';
-import HandIcon from './assets/HandIcon.svg';
-import IndicatorBubble from './assets/IndicatorBubble.svg';
-import SmallIndicatorBubble from './assets/SmallIndicatorBubble.svg';
-
-import SearchInput from './components/SearchInput';
 import RichInput from './components/RichInput/RichInput';
+import ShortcutHelpers from './components/ShortcutHelpers/ShortcutHelpers';
+
+type InputState = null | 'typing' | 'selecting' | 'finished';
 
 function App() {
+	const [inputState, setInputState] = useState<InputState>(null);
+	const [inputValue, setInputValue] = useState('');
+
 	return (
 		<div className='App'>
 			<div className='bubble-container'>
@@ -39,7 +39,11 @@ function App() {
 				/>
 				<div className='darken-bg' />
 			</div>
-			<RichInput />
+			<RichInput
+				inputValue={[inputValue, setInputValue]}
+				inputState={[inputState, setInputState]}
+			/>
+			<ShortcutHelpers inputState={inputState} />
 		</div>
 	);
 }

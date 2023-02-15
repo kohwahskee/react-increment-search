@@ -28,7 +28,7 @@
   cursor: text;
   word-break: break-word;
 
-  .selecting {
+  &.selecting {
     pointer-events: none;
   }
 }
@@ -60,16 +60,16 @@
   user-select: none;
   z-index: 0;
 
-  span {
-    .selecting {
-      pointer-events: auto;
-    }
+  span.selecting {
+    pointer-events: auto;
   }
 
   span[data-isnumber='true'] {
-    .selecting {
-      pointer-events: none;
-    }
+    // outline: 1px solid red;
+  }
+
+  span[data-isnumber='true'].selecting {
+    pointer-events: none;
   }
 
   // outline: 1px solid blue;

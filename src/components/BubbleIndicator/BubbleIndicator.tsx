@@ -4,6 +4,7 @@ import './style.scss';
 interface Props {
 	inputState: string | null;
 	numberInputSpans: HTMLSpanElement[];
+	singleCharacterWidth: number;
 }
 interface BubbleState {
 	top: number;
@@ -39,8 +40,13 @@ function bubbleReducer(state: BubbleState, action: BubbleReducerAction) {
 	}
 }
 
-export default function BubbleIndicator({ numberInputSpans, inputState }: Props) {
+export default function BubbleIndicator({
+	numberInputSpans,
+	inputState,
+	singleCharacterWidth,
+}: Props) {
 	const bubbleIndicatorRef = useRef<SVGSVGElement>(null);
+
 	const [bubbleState, dispatchBubbleState] = useReducer(bubbleReducer, {
 		top: 0,
 		left: 0,
@@ -63,6 +69,7 @@ export default function BubbleIndicator({ numberInputSpans, inputState }: Props)
 	}, [inputState]);
 
 	useLayoutEffect(() => {
+		console.log(bubbleIndicatorRef.current?.parentElement?.getBoundingClientRect().height);
 		dispatchBubbleState({ type: 'setMultiple', payload: getBubbleState() });
 	}, [bubbleState.height, bubbleState.length]);
 
@@ -73,14 +80,18 @@ export default function BubbleIndicator({ numberInputSpans, inputState }: Props)
 		const parentRect = bubbleIndicatorRef.current?.parentElement?.getBoundingClientRect();
 		const spanList = lastNumberSpan.innerText?.split('') || [];
 		const spanWithNumbers = spanList.filter((char) => !isNaN(parseInt(char)));
-		const realWidth = (spanRect.width / spanList?.length) * spanWithNumbers.length; // To get the width of the numbers only
 		const bubbleWidth = bubbleIndicatorRef.current?.getBoundingClientRect().width || 0;
+
+		// Word-wrap: break-word; makes the span smaller than the actual width of the text, including " "
+		// To avoid this, grab with of a single character (width of placeholder / innerText.length) and multiply it by the number of characters
+		const realWidth = singleCharacterWidth * spanWithNumbers.length; // To get the width of the numbers only
 
 		if (!parentRect) return bubbleState;
 		const top = ((spanRect.y - parentRect?.y + spanRect?.height / 2) / parentRect.height) * 100;
 		const left =
 			((spanRect.x - parentRect?.x + realWidth / 2 - bubbleWidth / 2) / parentRect.width) * 100;
 
+		// debugger;
 		return {
 			top,
 			left,

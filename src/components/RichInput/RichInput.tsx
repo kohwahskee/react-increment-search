@@ -2,33 +2,38 @@ import { FormEvent, useEffect, useRef, useState } from 'react';
 import './style.scss';
 // import { useTransition } from '@react-spring/web';
 // import IndicatorBubbble from '../../assets/IndicatorBubble.svg';
-
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { v4 as uuidv4 } from 'uuid';
 import BubbleIndicator from '../BubbleIndicator/BubbleIndicator';
 
 // TODO:
 // 1. Add animation for the bubble indicator
-// 2. Scale container based on bubble width or input height, whichever is bigger
 
 // FIXME:
 // 1. Bubble isn't in the center when at the end of line
+// 2. Bubble off center when there're multiple lines (likely due to container change in height)
 
 // NOTE:
 // 1. It's possible that spans are not updated when inputState changes is due to the fact
 // that it's generated and stored in the state
 
-export default function RichInput() {
-	type InputState = null | 'typing' | 'selecting' | 'finished';
+type InputState = null | 'typing' | 'selecting' | 'finished';
+interface Props {
+	inputValue: [string, React.Dispatch<React.SetStateAction<string>>];
+	inputState: [InputState, React.Dispatch<React.SetStateAction<InputState>>];
+}
 
+export default function RichInput({
+	inputValue: [inputValue, setInputValue],
+	inputState: [inputState, setInputState],
+}: Props) {
 	const INPUT_PLACEHOLDER = 'Search...';
 	const inputRef = useRef<HTMLDivElement>(null);
 	const containerRef = useRef<HTMLDivElement>(null);
+	const placeHolderRef = useRef<HTMLDivElement>(null);
 	const numberInputSpans = useRef<HTMLSpanElement[]>([]);
 	const inputValueSpans = useRef<HTMLSpanElement[]>([]);
-	const [inputState, setInputState] = useState<InputState>(null);
-	const [inputValue, setInputValue] = useState('');
-	// const [numberInputSpans, setNumberInputSpans] = useState<HTMLSpanElement[]>([]);
+	// const [inputState, setInputState] = useState<InputState>(null);
+	// const [inputValue, setInputValue] = inputValue;
 
 	// To make sure input caret is in the center
 	const DEFAULT_WIDTH = inputValue === '' ? '1rem' : '90%';
@@ -60,6 +65,9 @@ export default function RichInput() {
 
 	function inputSelectingHandler() {
 		inputRef.current?.blur();
+		inputValueSpans.current.forEach((span) => {
+			span.classList.add('selecting');
+		});
 	}
 	function inputFinishedHandler() {}
 
@@ -79,10 +87,26 @@ export default function RichInput() {
 		containerRef.current.style.height = `${inputRef.current?.offsetHeight}px`;
 	}, [inputValueSpans.current]);
 
+	useEffect(() => {
+		const keypressHandler = (e: KeyboardEvent) => {
+			if (e.key === '/') {
+				e.preventDefault();
+				setInputState('typing');
+			}
+		};
+		document.addEventListener('keypress', keypressHandler);
+
+		return () => {
+			document.removeEventListener('keypress', keypressHandler);
+		};
+	}, []);
+
 	function generateSpans() {
 		inputValueSpans.current = [];
 		numberInputSpans.current = [];
+
 		if (inputValue === '') return null;
+
 		const spans = inputValue.split(' ').map((word) => {
 			const isNumber = word.match(/^\d+\s*$/g)?.length === 1;
 			return (
@@ -99,6 +123,7 @@ export default function RichInput() {
 				</span>
 			);
 		});
+
 		return spans;
 	}
 	return (
@@ -106,11 +131,12 @@ export default function RichInput() {
 			className={`rich-input-container ${inputState !== 'typing' ? 'not-typing' : ''}`}
 			ref={containerRef}>
 			<div
+				className={`text-container ${inputState === 'selecting' ? 'selecting' : ''}`}
 				onClick={() => {
 					setInputState('typing');
-				}}
-				className='text-container'>
+				}}>
 				<span
+					ref={placeHolderRef}
 					style={{
 						color: inputValue === '' ? 'rgba(255,255,255,.5)' : 'transparent',
 						userSelect: 'none',
@@ -139,6 +165,10 @@ export default function RichInput() {
 				/>
 			</div>
 			<BubbleIndicator
+				singleCharacterWidth={
+					(placeHolderRef.current?.getBoundingClientRect().width || 0) /
+					(placeHolderRef.current?.innerText.length || 0)
+				}
 				inputState={inputState}
 				numberInputSpans={numberInputSpans.current}
 			/>
