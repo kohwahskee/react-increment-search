@@ -23,6 +23,7 @@ export default function BubbleIndicator({
 		visible: false,
 		isDragging: false,
 	});
+	const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
 	const EXTRA_HEIGHT = bubbleState.height + -35.45;
 	const SVG_DEFAULT_HEIGHT = 35.45;
@@ -44,13 +45,19 @@ export default function BubbleIndicator({
 
 	useLayoutEffect(() => {
 		if (!bubbleState.isDragging) {
-			dispatchBubbleState({ type: 'setMultiple', payload: getBubbleState() });
+			const { top, left } = getBubbleState();
+			dispatchBubbleState({ type: 'setMultiple', payload: { top, left } });
+		} else {
+			// update top and left
+			const { top, left } = getBubblePosition(mousePosition.x, mousePosition.y);
+			dispatchBubbleState({ type: 'setMultiple', payload: { top, left } });
 		}
 	}, [bubbleState.height, bubbleState.length]);
 
-	// useEffect(() => {
-	// 	console.log('bubbleState', bubbleState);
-	// }, [bubbleState]);
+	useEffect(() => {
+		const { top, left } = getBubblePosition(mousePosition.x, mousePosition.y);
+		dispatchBubbleState({ type: 'setMultiple', payload: { top, left } });
+	}, [mousePosition]);
 
 	function getBubbleState(): Partial<BubbleState> {
 		if (numberInputSpans.length === 0) return bubbleState;
@@ -70,7 +77,6 @@ export default function BubbleIndicator({
 		const left =
 			((spanRect.x - parentRect?.x + realWidth / 2 - bubbleWidth / 2) / parentRect.width) * 100;
 
-		// debugger;
 		return {
 			top,
 			left,
@@ -81,7 +87,7 @@ export default function BubbleIndicator({
 
 	const onMouseDown = () => {
 		document.addEventListener('mouseup', onMouseUp, { once: true });
-		dispatchBubbleState({ type: 'setIsDragging', payload: true });
+		// dispatchBubbleState({ type: 'setIsDragging', payload: true });
 		// console.log('clicked');
 		document.addEventListener('mousemove', onMouseMove);
 	};
@@ -96,22 +102,25 @@ export default function BubbleIndicator({
 	};
 
 	function draggingHandler(e: MouseEvent) {
+		setMousePosition({ x: e.clientX, y: e.clientY });
+		dispatchBubbleState({ type: 'setIsDragging', payload: true });
+	}
+
+	function getBubblePosition(x: number, y: number) {
 		const bubbleIndicator = bubbleIndicatorRef.current;
-		if (!bubbleIndicator) return;
+		if (!bubbleIndicator) return { top: 0, left: 0 };
 		const parentRect = bubbleIndicator.parentElement?.getBoundingClientRect();
-		if (!parentRect) return;
+		if (!parentRect) return { top: 0, left: 0 };
 		const bubbleRect = bubbleIndicator.getBoundingClientRect();
 		const newPos = {
-			x: ((e.clientX - parentRect.x - bubbleRect.width / 2) / parentRect.width) * 100,
-			y: ((e.clientY - parentRect.y) / parentRect.height) * 100,
+			x: ((x - parentRect.x - bubbleRect.width / 2) / parentRect.width) * 100,
+			y: ((y - parentRect.y) / parentRect.height) * 100,
 		};
-		// console.log(`x: ${e.clientX}, y: ${e.clientY}`);
 
-		dispatchBubbleState({
-			type: 'setMultiple',
-			payload: { top: newPos.y, left: newPos.x, length: -17, isDragging: true },
-		});
-		// dispatchBubbleState({ type: 'setIsDragging', payload: true });
+		return {
+			top: newPos.y,
+			left: newPos.x,
+		};
 	}
 	// debugger;
 	useEffect(() => {}, []);
