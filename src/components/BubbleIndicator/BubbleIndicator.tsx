@@ -1,43 +1,12 @@
-import { useEffect, useRef, useReducer, useLayoutEffect } from 'react';
+import { useEffect, useRef, useReducer, useLayoutEffect, useState } from 'react';
+import { InputState, BubbleState } from '../Utils/TypesExport';
+import bubbleReducer from './bubbleReducer';
 import './style.scss';
 
 interface Props {
-	inputState: string | null;
+	inputState: InputState;
 	numberInputSpans: HTMLSpanElement[];
 	singleCharacterWidth: number;
-}
-interface BubbleState {
-	top: number;
-	left: number;
-	length: number;
-	height: number;
-	visible: boolean;
-}
-type BubbleReducerAction =
-	| {
-			type: 'setBubbleTop' | 'setBubbleLeft' | 'setBubbleLength' | 'setBubbleHeight';
-			payload: number;
-	  }
-	| { type: 'setBubbleVisiblity'; payload: boolean }
-	| { type: 'setMultiple'; payload: Partial<BubbleState> };
-
-function bubbleReducer(state: BubbleState, action: BubbleReducerAction) {
-	switch (action.type) {
-		case 'setBubbleTop':
-			return { ...state, top: action.payload };
-		case 'setBubbleLeft':
-			return { ...state, left: action.payload };
-		case 'setBubbleLength':
-			return { ...state, length: action.payload };
-		case 'setBubbleHeight':
-			return { ...state, height: action.payload };
-		case 'setBubbleVisiblity':
-			return { ...state, visible: action.payload };
-		case 'setMultiple':
-			return { ...state, ...action.payload };
-		default:
-			return state;
-	}
 }
 
 export default function BubbleIndicator({
@@ -46,13 +15,13 @@ export default function BubbleIndicator({
 	singleCharacterWidth,
 }: Props) {
 	const bubbleIndicatorRef = useRef<SVGSVGElement>(null);
-
 	const [bubbleState, dispatchBubbleState] = useReducer(bubbleReducer, {
 		top: 0,
 		left: 0,
 		length: -17,
 		height: 77,
 		visible: false,
+		isDragging: false,
 	});
 
 	const EXTRA_HEIGHT = bubbleState.height + -35.45;
@@ -63,17 +32,27 @@ export default function BubbleIndicator({
 	const svgNewHeight = SVG_DEFAULT_HEIGHT + EXTRA_HEIGHT;
 
 	useEffect(() => {
-		if (inputState === 'selecting')
-			dispatchBubbleState({ type: 'setMultiple', payload: getBubbleState() });
-		else dispatchBubbleState({ type: 'setBubbleVisiblity', payload: false });
+		if (inputState === 'SELECTING') {
+			dispatchBubbleState({
+				type: 'setMultiple',
+				payload: { ...getBubbleState(), visible: numberInputSpans.length > 0 ? true : false },
+			});
+		} else {
+			dispatchBubbleState({ type: 'setBubbleVisiblity', payload: false });
+		}
 	}, [inputState]);
 
 	useLayoutEffect(() => {
-		console.log(bubbleIndicatorRef.current?.parentElement?.getBoundingClientRect().height);
-		dispatchBubbleState({ type: 'setMultiple', payload: getBubbleState() });
+		if (!bubbleState.isDragging) {
+			dispatchBubbleState({ type: 'setMultiple', payload: getBubbleState() });
+		}
 	}, [bubbleState.height, bubbleState.length]);
 
-	function getBubbleState(): BubbleState {
+	// useEffect(() => {
+	// 	console.log('bubbleState', bubbleState);
+	// }, [bubbleState]);
+
+	function getBubbleState(): Partial<BubbleState> {
 		if (numberInputSpans.length === 0) return bubbleState;
 		const lastNumberSpan = numberInputSpans[numberInputSpans.length - 1];
 		const spanRect = lastNumberSpan.getBoundingClientRect();
@@ -82,9 +61,9 @@ export default function BubbleIndicator({
 		const spanWithNumbers = spanList.filter((char) => !isNaN(parseInt(char)));
 		const bubbleWidth = bubbleIndicatorRef.current?.getBoundingClientRect().width || 0;
 
-		// Word-wrap: break-word; makes the span smaller than the actual width of the text, including " "
+		// Word-wrap: break-word; makes the span smaller than the actual width of the text, including " " when a word is at the end of the line when line break happens.
 		// To avoid this, grab with of a single character (width of placeholder / innerText.length) and multiply it by the number of characters
-		const realWidth = singleCharacterWidth * spanWithNumbers.length; // To get the width of the numbers only
+		const realWidth = singleCharacterWidth * spanWithNumbers.length;
 
 		if (!parentRect) return bubbleState;
 		const top = ((spanRect.y - parentRect?.y + spanRect?.height / 2) / parentRect.height) * 100;
@@ -95,13 +74,51 @@ export default function BubbleIndicator({
 		return {
 			top,
 			left,
-			visible: true,
 			height: spanRect.height,
 			length: -17 + 20 * (spanWithNumbers.length - 1),
 		};
 	}
+
+	const onMouseDown = () => {
+		document.addEventListener('mouseup', onMouseUp, { once: true });
+		dispatchBubbleState({ type: 'setIsDragging', payload: true });
+		// console.log('clicked');
+		document.addEventListener('mousemove', onMouseMove);
+	};
+
+	const onMouseUp = () => {
+		document.removeEventListener('mousemove', onMouseMove);
+		dispatchBubbleState({ type: 'setIsDragging', payload: false });
+	};
+
+	const onMouseMove = (e: MouseEvent) => {
+		draggingHandler(e);
+	};
+
+	function draggingHandler(e: MouseEvent) {
+		const bubbleIndicator = bubbleIndicatorRef.current;
+		if (!bubbleIndicator) return;
+		const parentRect = bubbleIndicator.parentElement?.getBoundingClientRect();
+		if (!parentRect) return;
+		const bubbleRect = bubbleIndicator.getBoundingClientRect();
+		const newPos = {
+			x: ((e.clientX - parentRect.x - bubbleRect.width / 2) / parentRect.width) * 100,
+			y: ((e.clientY - parentRect.y) / parentRect.height) * 100,
+		};
+		// console.log(`x: ${e.clientX}, y: ${e.clientY}`);
+
+		dispatchBubbleState({
+			type: 'setMultiple',
+			payload: { top: newPos.y, left: newPos.x, length: -17, isDragging: true },
+		});
+		// dispatchBubbleState({ type: 'setIsDragging', payload: true });
+	}
+	// debugger;
+	useEffect(() => {}, []);
+
 	return (
 		<svg
+			onMouseDown={onMouseDown}
 			onClick={() => console.log('clicked')}
 			style={{
 				top: `${bubbleState.top}%`,

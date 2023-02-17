@@ -1,9 +1,10 @@
-import { FormEvent, useEffect, useRef, useState } from 'react';
+import { FormEvent, useEffect, useRef } from 'react';
 import './style.scss';
 // import { useTransition } from '@react-spring/web';
 // import IndicatorBubbble from '../../assets/IndicatorBubble.svg';
 import { v4 as uuidv4 } from 'uuid';
 import BubbleIndicator from '../BubbleIndicator/BubbleIndicator';
+import { InputState } from '../Utils/TypesExport';
 
 // TODO:
 // 1. Add animation for the bubble indicator
@@ -16,7 +17,6 @@ import BubbleIndicator from '../BubbleIndicator/BubbleIndicator';
 // 1. It's possible that spans are not updated when inputState changes is due to the fact
 // that it's generated and stored in the state
 
-type InputState = null | 'typing' | 'selecting' | 'finished';
 interface Props {
 	inputValue: [string, React.Dispatch<React.SetStateAction<string>>];
 	inputState: [InputState, React.Dispatch<React.SetStateAction<InputState>>];
@@ -32,8 +32,6 @@ export default function RichInput({
 	const placeHolderRef = useRef<HTMLDivElement>(null);
 	const numberInputSpans = useRef<HTMLSpanElement[]>([]);
 	const inputValueSpans = useRef<HTMLSpanElement[]>([]);
-	// const [inputState, setInputState] = useState<InputState>(null);
-	// const [inputValue, setInputValue] = inputValue;
 
 	// To make sure input caret is in the center
 	const DEFAULT_WIDTH = inputValue === '' ? '1rem' : '90%';
@@ -51,10 +49,10 @@ export default function RichInput({
 	const inputEnterHandler = (e: React.KeyboardEvent) => {
 		if (e.key === 'Enter') {
 			e.preventDefault();
-			if (inputState === 'typing') {
-				setInputState('selecting');
-			} else if (inputState === 'selecting') {
-				setInputState('finished');
+			if (inputState === 'TYPING') {
+				setInputState('SELECTING');
+			} else if (inputState === 'SELECTING') {
+				setInputState('FINISHED');
 			}
 		}
 	};
@@ -66,17 +64,17 @@ export default function RichInput({
 	function inputSelectingHandler() {
 		inputRef.current?.blur();
 		inputValueSpans.current.forEach((span) => {
-			span.classList.add('selecting');
+			span.classList.add('SELECTING');
 		});
 	}
 	function inputFinishedHandler() {}
 
 	useEffect(() => {
-		if (inputState === 'typing') {
+		if (inputState === 'TYPING') {
 			inputTypingHandler();
-		} else if (inputState === 'selecting') {
+		} else if (inputState === 'SELECTING') {
 			inputSelectingHandler();
-		} else if (inputState === 'finished') {
+		} else if (inputState === 'FINISHED') {
 			inputFinishedHandler();
 		}
 	}, [inputState]);
@@ -91,7 +89,7 @@ export default function RichInput({
 		const keypressHandler = (e: KeyboardEvent) => {
 			if (e.key === '/') {
 				e.preventDefault();
-				setInputState('typing');
+				setInputState('TYPING');
 			}
 		};
 		document.addEventListener('keypress', keypressHandler);
@@ -108,7 +106,7 @@ export default function RichInput({
 		if (inputValue === '') return null;
 
 		const spans = inputValue.split(' ').map((word) => {
-			const isNumber = word.match(/^\d+\s*$/g)?.length === 1;
+			const isNumber = word.match(/^\s*\d+\s*$/g)?.length === 1;
 			return (
 				<span
 					ref={(el) => {
@@ -117,7 +115,7 @@ export default function RichInput({
 						if (isNumber) numberInputSpans.current.push(el as HTMLSpanElement);
 					}}
 					data-isnumber={isNumber}
-					className={`text-span ${inputState === 'selecting' ? 'selecting' : ''}`}
+					className={`text-span ${inputState === 'SELECTING' ? 'selecting' : ''}`}
 					key={uuidv4()}>
 					{`${word} `}
 				</span>
@@ -128,12 +126,12 @@ export default function RichInput({
 	}
 	return (
 		<div
-			className={`rich-input-container ${inputState !== 'typing' ? 'not-typing' : ''}`}
+			className={`rich-input-container ${inputState !== 'TYPING' ? 'not-typing' : ''}`}
 			ref={containerRef}>
 			<div
-				className={`text-container ${inputState === 'selecting' ? 'selecting' : ''}`}
+				className={`text-container ${inputState === 'SELECTING' ? 'selecting' : ''}`}
 				onClick={() => {
-					setInputState('typing');
+					setInputState('TYPING');
 				}}>
 				<span
 					ref={placeHolderRef}
@@ -158,8 +156,8 @@ export default function RichInput({
 					ref={inputRef}
 					onInput={onInputHandler}
 					onKeyDown={inputEnterHandler}
-					onBlur={() => setInputState('selecting')}
-					onFocus={() => setInputState('typing')}
+					onBlur={() => setInputState('SELECTING')}
+					onFocus={() => setInputState('TYPING')}
 					contentEditable
 					suppressContentEditableWarning
 				/>

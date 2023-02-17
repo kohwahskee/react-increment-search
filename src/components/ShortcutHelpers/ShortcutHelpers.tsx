@@ -3,7 +3,7 @@ import HandIcon from '../../assets/HandIcon.svg';
 import SlashIcon from '../../assets/SlashIcon.svg';
 import './style.scss';
 
-type InputState = null | 'typing' | 'selecting' | 'finished';
+type InputState = null | 'TYPING' | 'SELECTING' | 'FINISHED';
 
 interface Props {
 	inputState: InputState;
@@ -12,7 +12,7 @@ interface Props {
 export default function ShortcutHelpers({ inputState }: Props) {
 	return (
 		<div className='shortcut-helpers'>
-			<h3 style={{ opacity: inputState === 'selecting' ? 1 : 0 }}>
+			<h3 style={{ opacity: inputState === 'SELECTING' ? 1 : 0 }}>
 				<img
 					src={SlashIcon}
 					alt='Slash Button Icon'

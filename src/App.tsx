@@ -7,8 +7,7 @@ import Bubble3 from './assets/Bubble 3.svg';
 import Bubble4 from './assets/Bubble 4.svg';
 import RichInput from './components/RichInput/RichInput';
 import ShortcutHelpers from './components/ShortcutHelpers/ShortcutHelpers';
-
-type InputState = null | 'typing' | 'selecting' | 'finished';
+import { InputState } from './components/Utils/TypesExport';
 
 function App() {
 	const [inputState, setInputState] = useState<InputState>(null);
