@@ -15,7 +15,8 @@
 		"plugin:react/recommended",
 		"plugin:@typescript-eslint/recommended",
 		"airbnb-typescript",
-		"prettier"
+		"prettier",
+		"plugin:react-hooks/recommended"
 	],
 	"overrides": [],
 	"parser": "@typescript-eslint/parser",

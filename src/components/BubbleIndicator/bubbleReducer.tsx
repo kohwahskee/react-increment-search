@@ -6,6 +6,7 @@ type BubbleReducerAction =
 			payload: number;
 	  }
 	| { type: 'setBubbleVisiblity' | 'setIsDragging'; payload: boolean }
+	| { type: 'setSpanToAttach'; payload: HTMLSpanElement | null }
 	| { type: 'setMultiple'; payload: Partial<BubbleState> };
 
 export default function bubbleReducer(state: BubbleState, action: BubbleReducerAction) {
@@ -35,6 +36,8 @@ export default function bubbleReducer(state: BubbleState, action: BubbleReducerA
 			return tempObj;
 			// return { ...state, isDragging: action.payload };
 		}
+		case 'setSpanToAttach':
+			return { ...state, spanToAttach: action.payload };
 		case 'setMultiple':
 			return { ...state, ...action.payload };
 		default:

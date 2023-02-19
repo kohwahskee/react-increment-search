@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { InputState } from '../Utils/TypesExport';
 import useUpdateBubbleState from './useUpdateBubbleState';
 import './style.scss';
@@ -39,8 +39,30 @@ export default function BubbleIndicator({
 	function onMouseUp() {
 		document.removeEventListener('mousemove', onMouseMove);
 		dispatchBubbleState({ type: 'setIsDragging', payload: false });
+		const bubbleRect = bubbleIndicatorRef.current?.getBoundingClientRect();
+		const bubbleCenter = {
+			x: (bubbleRect?.left ?? 0) + (bubbleRect?.width ?? 0) / 2,
+			y: (bubbleRect?.top ?? 0) + (bubbleRect?.height ?? 0) / 2,
+		};
+		const spanToAttach = numberInputSpans.find((span) => {
+			const spanRect = span.getBoundingClientRect();
+			return (
+				bubbleCenter.x > spanRect.left &&
+				bubbleCenter.x < spanRect.right &&
+				bubbleCenter.y > spanRect.top &&
+				bubbleCenter.y < spanRect.bottom
+			);
+		});
+
+		dispatchBubbleState({ type: 'setSpanToAttach', payload: spanToAttach ?? null });
 	}
 
+	useEffect(() => {
+		dispatchBubbleState({
+			type: 'setSpanToAttach',
+			payload: numberInputSpans[numberInputSpans.length - 1],
+		});
+	}, [dispatchBubbleState, numberInputSpans]);
 	function onMouseMove(e: MouseEvent) {
 		draggingHandler(e);
 	}

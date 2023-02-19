@@ -5,6 +5,7 @@ interface BubbleState {
 	height: number;
 	visible: boolean;
 	isDragging: boolean;
+	spanToAttach: HTMLSpanElement | null;
 }
 
 type InputState = null | 'TYPING' | 'SELECTING' | 'FINISHED';

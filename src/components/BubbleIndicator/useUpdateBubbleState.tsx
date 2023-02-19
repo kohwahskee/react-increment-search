@@ -9,6 +9,7 @@ const bubbleInitialState: BubbleState = {
 	height: 77,
 	visible: false,
 	isDragging: false,
+	spanToAttach: null,
 };
 
 export default function useUpdateBubbleState(
@@ -24,21 +25,30 @@ export default function useUpdateBubbleState(
 		if (inputState === 'SELECTING') {
 			dispatchBubbleState({
 				type: 'setMultiple',
-				payload: { ...getBubbleState(), visible: numberInputSpans.length > 0 ? true : false },
+				payload: {
+					...getBubbleStateOnSpan(bubbleState.spanToAttach),
+					visible: numberInputSpans.length > 0 ? true : false,
+				},
 			});
 		} else {
 			dispatchBubbleState({ type: 'setBubbleVisiblity', payload: false });
 		}
-	}, [inputState]);
+	}, [inputState, bubbleState.spanToAttach]);
 
 	useEffect(() => {
 		const { top, left } = getBubblePosition(mousePosition.x, mousePosition.y);
 		dispatchBubbleState({ type: 'setMultiple', payload: { top, left } });
 	}, [mousePosition]);
 
+	// TODO:
+	// 1. Bubble should still update and snap back to span even when spanToAttach is the same
+	//    due to useEffect dependency array
+	// 2. When spanToAttach === null, maybe snap back to the previously selected span instead of last span
+	// FIXME:
+	// 1. There's an issue with bubble mispositioned when it is dragged immediately after being snapped
 	useLayoutEffect(() => {
 		if (!bubbleState.isDragging) {
-			const { top, left } = getBubbleState();
+			const { top, left } = getBubbleStateOnSpan(bubbleState.spanToAttach);
 			dispatchBubbleState({ type: 'setMultiple', payload: { top, left } });
 		} else {
 			const { top, left } = getBubblePosition(mousePosition.x, mousePosition.y);
@@ -72,12 +82,13 @@ export default function useUpdateBubbleState(
 	 * Get bubble state based on the last number span
 	 * @returns top and left position
 	 */
-	function getBubbleState(): Partial<BubbleState> {
+	function getBubbleStateOnSpan(currentSpan: HTMLSpanElement | null): Partial<BubbleState> {
+		if (!currentSpan) currentSpan = numberInputSpans[numberInputSpans.length - 1];
 		if (numberInputSpans.length === 0) return bubbleState;
-		const lastNumberSpan = numberInputSpans[numberInputSpans.length - 1];
-		const spanRect = lastNumberSpan.getBoundingClientRect();
+		// const lastNumberSpan = numberInputSpans[numberInputSpans.length - 1];
+		const spanRect = currentSpan.getBoundingClientRect();
 		const parentRect = bubbleIndicatorRef.current?.parentElement?.getBoundingClientRect();
-		const spanList = lastNumberSpan.innerText?.split('') || [];
+		const spanList = currentSpan.innerText?.split('') || [];
 		const spanWithNumbers = spanList.filter((char) => !isNaN(parseInt(char)));
 		const bubbleWidth = bubbleIndicatorRef.current?.getBoundingClientRect().width || 0;
 		if (!parentRect) return bubbleState;
