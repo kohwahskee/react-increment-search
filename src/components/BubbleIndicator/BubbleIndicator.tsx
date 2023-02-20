@@ -38,7 +38,6 @@ export default function BubbleIndicator({
 
 	function onMouseUp() {
 		document.removeEventListener('mousemove', onMouseMove);
-		dispatchBubbleState({ type: 'setIsDragging', payload: false });
 		const bubbleRect = bubbleIndicatorRef.current?.getBoundingClientRect();
 		const bubbleCenter = {
 			x: (bubbleRect?.left ?? 0) + (bubbleRect?.width ?? 0) / 2,
@@ -53,7 +52,7 @@ export default function BubbleIndicator({
 				bubbleCenter.y < spanRect.bottom
 			);
 		});
-
+		dispatchBubbleState({ type: 'setIsDragging', payload: false });
 		dispatchBubbleState({ type: 'setSpanToAttach', payload: spanToAttach ?? null });
 	}
 
@@ -75,7 +74,7 @@ export default function BubbleIndicator({
 	return (
 		<svg
 			onMouseDown={onMouseDown}
-			onClick={() => console.log('clicked')}
+			// onClick={() => console.log('clicked')}
 			style={{
 				top: `${bubbleState.top}%`,
 				left: `${bubbleState.left}%`,
