@@ -1,4 +1,4 @@
-import { BubbleState } from '../Utils/TypesExport';
+import { BubbleState } from '../../Utils/TypesExport';
 
 type BubbleReducerAction =
 	| {
@@ -19,8 +19,12 @@ type BubbleReducerAction =
 	  }
 	| {
 			type: 'updateBubbleOnMouse';
-			payload: { mousePosition: { x: number; y: number }; bubbleIndicator: SVGElement | null };
-	  };
+			payload: {
+				mousePosition: { x: number; y: number };
+				bubbleIndicator: SVGElement | null;
+			};
+	  }
+	| { type: 'resetBubble' };
 
 export default function bubbleReducer(state: BubbleState, action: BubbleReducerAction) {
 	switch (action.type) {
@@ -68,6 +72,15 @@ export default function bubbleReducer(state: BubbleState, action: BubbleReducerA
 				...state,
 				...getBubblePosition(action.payload.mousePosition, action.payload.bubbleIndicator),
 			};
+		case 'resetBubble':
+			return {
+				...state,
+				top: 0,
+				left: 0,
+				length: -17,
+				spanToAttach: null,
+				visible: false,
+			};
 		default:
 			return state;
 	}
@@ -86,10 +99,10 @@ function getBubblePosition(
 	const bubbleIndicator = bubble;
 	const parentRect = bubbleIndicator?.parentElement?.getBoundingClientRect();
 	const bubbleRect = bubbleIndicator?.getBoundingClientRect();
-
 	if (!parentRect || !bubbleRect) return { top: 0, left: 0 };
+	const bubbleWidth = bubbleRect.width || 0;
 	const newPos = {
-		x: ((x - parentRect.x - bubbleRect.width / 2) / parentRect.width) * 100,
+		x: ((x - parentRect.x - bubbleWidth / 2) / parentRect.width) * 100,
 		y: ((y - parentRect.y) / parentRect.height) * 100,
 	};
 

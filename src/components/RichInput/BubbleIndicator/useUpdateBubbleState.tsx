@@ -1,6 +1,7 @@
-import { InputState, BubbleState } from '../Utils/TypesExport';
+import { InputState, BubbleState } from '../../Utils/TypesExport';
 import { useReducer, useEffect, useLayoutEffect } from 'react';
 import bubbleReducer from './bubbleReducer';
+import { SpringRef } from '@react-spring/web';
 
 const bubbleInitialState: BubbleState = {
 	top: 0,
@@ -17,14 +18,17 @@ export default function useUpdateBubbleState(
 	inputState: InputState,
 	bubbleIndicatorRef: React.RefObject<SVGSVGElement>,
 	numberInputSpans: HTMLSpanElement[],
-	singleCharacterWidth: number
+	singleCharacterWidth: number,
+	bubbleAnimationController: SpringRef
 ) {
 	const [bubbleState, dispatchBubbleState] = useReducer(bubbleReducer, bubbleInitialState);
 
-	// When input state changes, update bubble state
 	useEffect(() => {
 		if (inputState === 'SELECTING') {
-			dispatchBubbleState({ type: 'setBubbleVisiblity', payload: true });
+			dispatchBubbleState({
+				type: 'setBubbleVisiblity',
+				payload: numberInputSpans.length > 0,
+			});
 			dispatchBubbleState({
 				type: 'updateBubbleOnSpan',
 				payload: {
@@ -35,7 +39,7 @@ export default function useUpdateBubbleState(
 				},
 			});
 		} else {
-			dispatchBubbleState({ type: 'setBubbleVisiblity', payload: false });
+			dispatchBubbleState({ type: 'resetBubble' });
 		}
 	}, [
 		inputState,
@@ -45,35 +49,21 @@ export default function useUpdateBubbleState(
 		bubbleIndicatorRef,
 	]);
 
-	// When mouse position changes, update bubble state
-	useEffect(() => {
-		if (!bubbleState.isDragging) return;
-		dispatchBubbleState({
-			type: 'updateBubbleOnMouse',
-			payload: {
-				mousePosition,
-				bubbleIndicator: bubbleIndicatorRef.current,
-			},
-		});
-	}, [bubbleIndicatorRef, bubbleState.isDragging, mousePosition]);
-
-	// TODO:
-	// 1. Bubble should still update and snap back to span even when spanToAttach is the same
-	//    due to useEffect dependency array
-	// 2. When spanToAttach === null, maybe snap back to the previously selected span instead of last span
-	// FIXME:
-	// 1. There's an issue with bubble mispositioned when it is dragged immediately after being snapped
 	useLayoutEffect(() => {
 		if (!bubbleState.isDragging) {
-			dispatchBubbleState({
-				type: 'updateBubbleOnSpan',
-				payload: {
-					numberInputSpans,
-					singleCharacterWidth,
-					bubbleIndicator: bubbleIndicatorRef.current,
-					spanToAttach: bubbleState.spanToAttach,
-				},
-			});
+			if (!bubbleState.visible) {
+				dispatchBubbleState({ type: 'resetBubble' });
+			} else {
+				dispatchBubbleState({
+					type: 'updateBubbleOnSpan',
+					payload: {
+						numberInputSpans,
+						singleCharacterWidth,
+						bubbleIndicator: bubbleIndicatorRef.current,
+						spanToAttach: bubbleState.spanToAttach,
+					},
+				});
+			}
 		} else {
 			dispatchBubbleState({
 				type: 'updateBubbleOnMouse',
@@ -84,15 +74,30 @@ export default function useUpdateBubbleState(
 			});
 		}
 	}, [
+		bubbleAnimationController,
 		bubbleIndicatorRef,
 		bubbleState.height,
 		bubbleState.isDragging,
 		bubbleState.length,
 		bubbleState.spanToAttach,
+		bubbleState.visible,
 		mousePosition,
 		numberInputSpans,
 		singleCharacterWidth,
 	]);
+
+	// When mouse position changes, update bubble state
+	useEffect(() => {
+		console.log('mouse position changed');
+		if (!bubbleState.isDragging) return;
+		dispatchBubbleState({
+			type: 'updateBubbleOnMouse',
+			payload: {
+				mousePosition,
+				bubbleIndicator: bubbleIndicatorRef.current,
+			},
+		});
+	}, [bubbleIndicatorRef, bubbleState.isDragging, mousePosition]);
 
 	return [bubbleState, dispatchBubbleState] as const;
 }

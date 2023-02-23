@@ -3,7 +3,7 @@ import './style.scss';
 // import { useTransition } from '@react-spring/web';
 // import IndicatorBubbble from '../../assets/IndicatorBubble.svg';
 import { v4 as uuidv4 } from 'uuid';
-import BubbleIndicator from '../BubbleIndicator/BubbleIndicator';
+import BubbleIndicator from './BubbleIndicator/BubbleIndicator';
 import { InputState } from '../Utils/TypesExport';
 
 // TODO:
@@ -59,6 +59,12 @@ export default function RichInput({
 
 	function inputTypingHandler() {
 		inputRef.current?.focus();
+		const range = document.createRange();
+		const selection = window.getSelection();
+		range.selectNodeContents(inputRef.current as HTMLDivElement);
+		range.collapse(false);
+		selection?.removeAllRanges();
+		selection?.addRange(range);
 	}
 
 	function inputSelectingHandler() {
@@ -105,7 +111,7 @@ export default function RichInput({
 
 		if (inputValue === '') return null;
 
-		const spans = inputValue.split(' ').map((word) => {
+		const spans = inputValue.split(' ').map((word, index) => {
 			const isNumber = word.match(/^\s*\d+\s*$/g)?.length === 1;
 			return (
 				<span
@@ -116,7 +122,7 @@ export default function RichInput({
 					}}
 					data-isnumber={isNumber}
 					className={`text-span ${inputState === 'SELECTING' ? 'selecting' : ''}`}
-					key={uuidv4()}>
+					key={`word-${index}`}>
 					{`${word} `}
 				</span>
 			);

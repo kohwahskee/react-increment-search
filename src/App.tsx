@@ -43,6 +43,7 @@ function App() {
 				inputState={[inputState, setInputState]}
 			/>
 			<ShortcutHelpers inputState={inputState} />
+			<div className='enter-icon'>Enter</div>
 		</div>
 	);
 }

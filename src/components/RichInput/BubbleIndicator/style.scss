@@ -3,9 +3,9 @@ svg {
   inset: 0;
   transform: translate(-2px, -50%);
   fill: var(--color-blue);
-  outline: 1px solid blue;
+  // outline: 1px solid blue;
   overflow: visible;
   cursor: grab;
   z-index: -10;
-
+  transform-origin: center;
 }

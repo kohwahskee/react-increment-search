@@ -1,4 +1,7 @@
-1. Add animation for bubble
-2. Add drag/drop functionality
-3. Match container height with input's
-4. Appreciate the greatness of useLayoutEffect()v
+TODO:
+
+1. When input is focused, move caret to last position
+
+FIXME:
+
+1. spanToAttach is not reset when old ones are gone, causing bubble to disappear.
