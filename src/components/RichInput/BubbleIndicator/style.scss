@@ -1,9 +1,8 @@
 svg {
   position: absolute;
   inset: 0;
-  transform: translate(-2px, -50%);
+  transform: translate(0, -50%);
   fill: var(--color-blue);
-  // outline: 1px solid blue;
   overflow: visible;
   cursor: grab;
   z-index: -10;

@@ -1,6 +1,6 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { InputState } from '../../Utils/TypesExport';
-import { useSpring, animated, useSpringRef, easings } from '@react-spring/web';
+import { useSpring, animated, easings } from '@react-spring/web';
 import useUpdateBubbleState from './useUpdateBubbleState';
 import './style.scss';
 
@@ -8,25 +8,28 @@ interface Props {
 	inputState: InputState;
 	numberInputSpans: HTMLSpanElement[];
 	singleCharacterWidth: number;
+	setSelectedSpan: React.Dispatch<React.SetStateAction<HTMLSpanElement | null>>;
 }
 
 export default function BubbleIndicator({
 	numberInputSpans,
 	inputState,
 	singleCharacterWidth,
+	setSelectedSpan,
 }: Props) {
 	const bubbleIndicatorRef = useRef<SVGSVGElement>(null);
-	const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-	const bubbleAnimationController = useSpringRef();
 	const hoveringSpan = useRef<HTMLSpanElement>();
+
+	const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
 	const [bubbleState, dispatchBubbleState] = useUpdateBubbleState(
 		mousePosition,
 		inputState,
 		bubbleIndicatorRef,
 		numberInputSpans,
-		singleCharacterWidth,
-		bubbleAnimationController
+		singleCharacterWidth
 	);
+
 	const bubbleAnimation = useSpring({
 		to: { length: bubbleState.length, top: bubbleState.top, left: bubbleState.left },
 		config: (key) => {
@@ -49,6 +52,9 @@ export default function BubbleIndicator({
 	const svgNewWidth = SVG_DEFAULT_WIDTH + bubbleState.length + EXTRA_HEIGHT * newAspectRatio;
 	const svgNewHeight = SVG_DEFAULT_HEIGHT + EXTRA_HEIGHT;
 
+	useEffect(() => {
+		setSelectedSpan(bubbleState.spanToAttach ?? numberInputSpans.at(-1) ?? null);
+	}, [bubbleState.spanToAttach, numberInputSpans, setSelectedSpan]);
 	function onMouseDown() {
 		document.addEventListener('mouseup', onMouseUp, { once: true });
 		document.addEventListener('mousemove', onMouseMove);
@@ -58,6 +64,10 @@ export default function BubbleIndicator({
 		document.removeEventListener('mousemove', onMouseMove);
 		dispatchBubbleState({ type: 'setIsDragging', payload: false });
 		dispatchBubbleState({ type: 'setSpanToAttach', payload: hoveringSpan.current ?? null });
+
+		numberInputSpans.forEach((span) => {
+			span.classList.remove('hovering');
+		});
 	}
 
 	function onMouseMove(e: MouseEvent) {
@@ -72,7 +82,7 @@ export default function BubbleIndicator({
 		};
 		numberInputSpans.forEach((span) => {
 			const spanRect = span.getBoundingClientRect();
-			const BOUND_THRESHOLD = 20;
+			const BOUND_THRESHOLD = 0;
 			if (
 				bubbleCenter.x > spanRect.left - BOUND_THRESHOLD &&
 				bubbleCenter.x < spanRect.right + BOUND_THRESHOLD &&
@@ -94,7 +104,6 @@ export default function BubbleIndicator({
 		<animated.svg
 			onMouseDown={onMouseDown}
 			style={{
-				transform: `translate(-2px, -50%)`,
 				top: bubbleAnimation.top.to((value) => `${value}%`),
 				left: bubbleAnimation.left.to((value) => `${value}%`),
 				opacity: bubbleState.visible ? 1 : 0,

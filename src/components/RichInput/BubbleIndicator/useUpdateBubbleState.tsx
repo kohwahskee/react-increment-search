@@ -1,7 +1,6 @@
 import { InputState, BubbleState } from '../../Utils/TypesExport';
 import { useReducer, useEffect, useLayoutEffect } from 'react';
 import bubbleReducer from './bubbleReducer';
-import { SpringRef } from '@react-spring/web';
 
 const bubbleInitialState: BubbleState = {
 	top: 0,
@@ -18,8 +17,7 @@ export default function useUpdateBubbleState(
 	inputState: InputState,
 	bubbleIndicatorRef: React.RefObject<SVGSVGElement>,
 	numberInputSpans: HTMLSpanElement[],
-	singleCharacterWidth: number,
-	bubbleAnimationController: SpringRef
+	singleCharacterWidth: number
 ) {
 	const [bubbleState, dispatchBubbleState] = useReducer(bubbleReducer, bubbleInitialState);
 
@@ -38,6 +36,9 @@ export default function useUpdateBubbleState(
 					bubbleIndicator: bubbleIndicatorRef.current,
 				},
 			});
+		} else if (inputState === 'FINISHED') {
+			console.log('finished');
+			dispatchBubbleState({ type: 'setBubbleVisiblity', payload: false });
 		} else {
 			dispatchBubbleState({ type: 'resetBubble' });
 		}
@@ -51,7 +52,7 @@ export default function useUpdateBubbleState(
 
 	useLayoutEffect(() => {
 		if (!bubbleState.isDragging) {
-			if (!bubbleState.visible) {
+			if (!bubbleState.visible && inputState !== 'FINISHED') {
 				dispatchBubbleState({ type: 'resetBubble' });
 			} else {
 				dispatchBubbleState({
@@ -74,13 +75,13 @@ export default function useUpdateBubbleState(
 			});
 		}
 	}, [
-		bubbleAnimationController,
 		bubbleIndicatorRef,
 		bubbleState.height,
 		bubbleState.isDragging,
 		bubbleState.length,
 		bubbleState.spanToAttach,
 		bubbleState.visible,
+		inputState,
 		mousePosition,
 		numberInputSpans,
 		singleCharacterWidth,
@@ -88,7 +89,6 @@ export default function useUpdateBubbleState(
 
 	// When mouse position changes, update bubble state
 	useEffect(() => {
-		console.log('mouse position changed');
 		if (!bubbleState.isDragging) return;
 		dispatchBubbleState({
 			type: 'updateBubbleOnMouse',
