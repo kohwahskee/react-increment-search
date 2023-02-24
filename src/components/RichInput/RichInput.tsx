@@ -1,4 +1,5 @@
-import { FormEvent, useEffect, useRef, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState, useCallback, useLayoutEffect } from 'react';
+import { useSpring, animated, easings } from '@react-spring/web';
 import './style.scss';
 import BubbleIndicator from './BubbleIndicator/BubbleIndicator';
 import { InputState } from '../Utils/TypesExport';
@@ -22,7 +23,9 @@ export default function RichInput({
 	const INPUT_PLACEHOLDER = 'Search...';
 
 	const [selectedSpan, setSelectedSpan] = useState<HTMLSpanElement | null>(null);
+	const [containerBBox, setContainerBBox] = useState<DOMRect | null>(null);
 
+	const [containerSpring, containerSpringAPI] = useSpring(() => ({}));
 	const inputRef = useRef<HTMLDivElement>(null);
 	const containerRef = useRef<HTMLDivElement>(null);
 	const placeHolderRef = useRef<HTMLDivElement>(null);
@@ -67,6 +70,33 @@ export default function RichInput({
 		inputRef.current?.blur();
 	}
 
+	const parseSearchQuery = useCallback(() => {
+		let firstHalf = '',
+			secondHalf = '';
+		const incrementable = parseInt(selectedSpan?.innerText || '', 10);
+		let flip = false;
+		inputValueSpans.current.forEach((span) => {
+			if (span === selectedSpan) {
+				flip = true;
+				return;
+			}
+			if (!flip) {
+				firstHalf += span.innerText;
+			} else {
+				secondHalf += span.innerText;
+			}
+		});
+		setSearchQuery({
+			firstHalf,
+			secondHalf,
+			incrementable,
+		});
+	}, [selectedSpan, setSearchQuery]);
+
+	const inputFinishedHandler = useCallback(() => {
+		parseSearchQuery();
+	}, [parseSearchQuery]);
+
 	useEffect(() => {
 		if (inputState === 'TYPING') {
 			inputTypingHandler();
@@ -75,30 +105,7 @@ export default function RichInput({
 		} else if (inputState === 'FINISHED') {
 			inputFinishedHandler();
 		}
-
-		function inputFinishedHandler() {
-			let firstHalf = '',
-				secondHalf = '';
-			const incrementable = parseInt(selectedSpan?.innerText || '', 10);
-			let flip = false;
-			inputValueSpans.current.forEach((span) => {
-				if (span === selectedSpan) {
-					flip = true;
-					return;
-				}
-				if (!flip) {
-					firstHalf += span.innerText;
-				} else {
-					secondHalf += span.innerText;
-				}
-			});
-			setSearchQuery({
-				firstHalf,
-				secondHalf,
-				incrementable,
-			});
-		}
-	}, [inputState, selectedSpan, setSearchQuery]);
+	}, [inputFinishedHandler, inputState, setSearchQuery]);
 
 	useEffect(() => {
 		if (!containerRef.current) return;
@@ -112,9 +119,8 @@ export default function RichInput({
 				setInputState('TYPING');
 			}
 			if (e.key === 'Enter') {
-				console.log('enter pressed');
 				if (inputState === 'SELECTING') {
-					console.log('enter pressed in selecting state');
+					setContainerBBox(containerRef.current?.getBoundingClientRect() ?? null);
 					setInputState('FINISHED');
 				}
 			}
@@ -125,6 +131,15 @@ export default function RichInput({
 			document.removeEventListener('keypress', keypressHandler);
 		};
 	}, [inputState, setInputState]);
+
+	// useLayoutEffect(() => {
+	// 	const oldRect = containerBBox;
+	// 	const newRect = containerRef.current?.getBoundingClientRect() ?? null;
+	// 	if (!oldRect || !newRect) return;
+	// 	if (inputState === 'FINISHED') {
+
+	// 	}
+	// }, [inputState]);
 
 	function generateSpans() {
 		inputValueSpans.current = [];
@@ -152,8 +167,10 @@ export default function RichInput({
 		return spans;
 	}
 	return (
-		<div
-			className={`rich-input-container ${inputState !== 'TYPING' ? 'not-typing' : ''}`}
+		<animated.div
+			className={`rich-input-container ${inputState !== 'TYPING' ? 'not-typing' : ''} ${
+				inputState === 'FINISHED' ? 'result-screen' : ''
+			} `}
 			ref={containerRef}>
 			<div
 				className={`text-container ${
@@ -200,6 +217,6 @@ export default function RichInput({
 				inputState={inputState}
 				numberInputSpans={numberInputSpans.current}
 			/>
-		</div>
+		</animated.div>
 	);
 }
