@@ -5,12 +5,12 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(1);
   // outline: 1px solid white;
   font-family: 'AnonymousPro';
-  transition: all 200ms ease-out;
   border-radius: .5rem;
-  transition-property: backdrop-filter, box-shadow, transform, top, left, height;
+  // transition: all 200ms ease-out;
+  // transition-property: backdrop-filter, box-shadow, transform, top, left, height;
 
   &.not-typing {
     backdrop-filter: blur(50px);

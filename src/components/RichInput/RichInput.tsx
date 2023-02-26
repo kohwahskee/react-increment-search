@@ -15,6 +15,9 @@ interface Props {
 	setSearchQuery: React.Dispatch<React.SetStateAction<SearchQuery>>;
 }
 
+//TODO:
+// 1. Sanatise input
+
 export default function RichInput({
 	inputValue: [inputValue, setInputValue],
 	inputState: [inputState, setInputState],
@@ -22,10 +25,13 @@ export default function RichInput({
 }: Props) {
 	const INPUT_PLACEHOLDER = 'Search...';
 
-	const [selectedSpan, setSelectedSpan] = useState<HTMLSpanElement | null>(null);
-	const [containerBBox, setContainerBBox] = useState<DOMRect | null>(null);
+	const [containerSpring, containerSpringAPI] = useSpring(() => ({
+		from: { transform: '' },
+	}));
 
-	const [containerSpring, containerSpringAPI] = useSpring(() => ({}));
+	const [selectedSpan, setSelectedSpan] = useState<HTMLSpanElement | null>(null);
+
+	const initialContainerBBox = useRef<DOMRect>();
 	const inputRef = useRef<HTMLDivElement>(null);
 	const containerRef = useRef<HTMLDivElement>(null);
 	const placeHolderRef = useRef<HTMLDivElement>(null);
@@ -109,7 +115,7 @@ export default function RichInput({
 
 	useEffect(() => {
 		if (!containerRef.current) return;
-		containerRef.current.style.height = `${inputRef.current?.offsetHeight}px`;
+		containerRef.current.style.height = inputRef.current?.offsetHeight + 'px';
 	}, [inputValue]);
 
 	useEffect(() => {
@@ -119,8 +125,8 @@ export default function RichInput({
 				setInputState('TYPING');
 			}
 			if (e.key === 'Enter') {
-				if (inputState === 'SELECTING') {
-					setContainerBBox(containerRef.current?.getBoundingClientRect() ?? null);
+				if (inputState === 'SELECTING' && inputValue !== '') {
+					initialContainerBBox.current = containerRef.current?.getBoundingClientRect();
 					setInputState('FINISHED');
 				}
 			}
@@ -132,14 +138,59 @@ export default function RichInput({
 		};
 	}, [inputState, setInputState]);
 
-	// useLayoutEffect(() => {
-	// 	const oldRect = containerBBox;
-	// 	const newRect = containerRef.current?.getBoundingClientRect() ?? null;
-	// 	if (!oldRect || !newRect) return;
-	// 	if (inputState === 'FINISHED') {
+	useLayoutEffect(() => {
+		const firstRect = initialContainerBBox.current;
+		const lastRect = containerRef.current?.getBoundingClientRect() ?? null;
+		if (!firstRect || !lastRect) return;
 
-	// 	}
-	// }, [inputState]);
+		const oldMiddlePointX = firstRect.x + firstRect.width / 2;
+		const newMiddlePointX = lastRect.x + lastRect.width / 2;
+		const xToMiddleRatio = (oldMiddlePointX - firstRect.x) / firstRect.width;
+		const newX = newMiddlePointX * xToMiddleRatio;
+
+		const oldMiddlePointY = firstRect.y + firstRect.height / 2;
+		const newMiddlePointY = lastRect.y + lastRect.height / 2;
+		const yToMiddleRatio = (oldMiddlePointY - firstRect.y) / firstRect.height;
+		const newY = newMiddlePointY * yToMiddleRatio;
+		let x, y;
+		if (inputState === 'FINISHED') {
+			x = firstRect.x - newX;
+			({ y } = firstRect);
+		} else {
+			({ x } = lastRect);
+			x = x * -1;
+			y = newMiddlePointY * -1;
+		}
+		if (!containerRef.current) return;
+
+		// FIXME:
+		// 1. Redo calculation for x and y. Maybe straight up use the middle point of the container
+		// 2. Transformation is conflicted. First transform needs to be (-50,-50) but transform to property need to always be (0,0)
+		console.log('old');
+		console.log(firstRect);
+		console.log('new');
+		console.log(lastRect);
+		initialContainerBBox.current = lastRect ?? undefined;
+		const DEFAULT_TRANSFORM = {
+			typing: 'translate(0px, 0px) scale(.4)',
+			finished: 'translate(-50%, -50%) scale(1)',
+		};
+		containerSpringAPI.set({
+			transform: `translate(${x}px, ${y}px) scale(${inputState === 'FINISHED' ? 1 : 0.4})`,
+		});
+		console.log(containerRef.current.style.transform);
+
+		containerSpringAPI.start({
+			from: {
+				transform: `translate(${x}px, ${y}px) scale(${inputState === 'FINISHED' ? 1 : 0.4})`,
+			},
+			to: { transform: `translate(0,0) scale(${inputState === 'FINISHED' ? 0.4 : 1})` },
+			config: { mass: 1, tension: 400, friction: 20 },
+			onRest: (_result, ctrl) => {
+				ctrl.set({ transform: '' });
+			},
+		});
+	}, [inputState]);
 
 	function generateSpans() {
 		inputValueSpans.current = [];
@@ -168,6 +219,7 @@ export default function RichInput({
 	}
 	return (
 		<animated.div
+			style={containerSpring}
 			className={`rich-input-container ${inputState !== 'TYPING' ? 'not-typing' : ''} ${
 				inputState === 'FINISHED' ? 'result-screen' : ''
 			} `}
