@@ -1,5 +1,6 @@
-import { FormEvent, useEffect, useRef, useState, useCallback, useLayoutEffect } from 'react';
-import { useSpring, animated, easings } from '@react-spring/web';
+import { FormEvent, useEffect, useRef } from 'react';
+import { animated } from '@react-spring/web';
+import useInputAnimation from './useInputAnimation';
 import './style.scss';
 import BubbleIndicator from './BubbleIndicator/BubbleIndicator';
 import { InputState } from '../Utils/TypesExport';
@@ -15,8 +16,8 @@ interface Props {
 	setSearchQuery: React.Dispatch<React.SetStateAction<SearchQuery>>;
 }
 
-//TODO:
-// 1. Sanatise input
+// TODO: Limit characters to ~25 when input is in FINISHED state
+// FIXME: When there's blank space at the very first of input, number span will include the blank space causing position calculation to be off
 
 export default function RichInput({
 	inputValue: [inputValue, setInputValue],
@@ -24,14 +25,13 @@ export default function RichInput({
 	setSearchQuery,
 }: Props) {
 	const INPUT_PLACEHOLDER = 'Search...';
+	const containerSpring = useInputAnimation(inputState);
 
-	const [containerSpring, containerSpringAPI] = useSpring(() => ({
-		from: { transform: '' },
-	}));
+	const selectedSpanRef = useRef<HTMLSpanElement | null>(null);
+	const setSelectedSpan = (span: HTMLSpanElement | null) => {
+		selectedSpanRef.current = span;
+	};
 
-	const [selectedSpan, setSelectedSpan] = useState<HTMLSpanElement | null>(null);
-
-	const initialContainerBBox = useRef<DOMRect>();
 	const inputRef = useRef<HTMLDivElement>(null);
 	const containerRef = useRef<HTMLDivElement>(null);
 	const placeHolderRef = useRef<HTMLDivElement>(null);
@@ -41,18 +41,24 @@ export default function RichInput({
 	// To make sure input caret is in the center
 	const DEFAULT_WIDTH = inputValue === '' ? '1rem' : '90%';
 
-	const onInputHandler = (e: FormEvent) => {
+	function onInputHandler(e: FormEvent) {
 		const text = (e.target as HTMLDivElement).innerText;
-
+		// (e.target as HTMLDivElement).innerText = text.toString();
 		if (text === '\n') {
 			// contentEditable will add <br> when empty
 			setInputValue('');
 			return;
 		}
 		setInputValue(text);
-	};
+	}
 
-	const inputEnterHandler = (e: React.KeyboardEvent) => {
+	function onPasteHandler(e: React.ClipboardEvent) {
+		e.preventDefault();
+		const plainText = e.clipboardData.getData('text/plain').replaceAll(/\n+/g, ' ');
+		document.execCommand('insertText', false, plainText);
+	}
+
+	function inputEnterHandler(e: React.KeyboardEvent) {
 		if (e.key === 'Enter') {
 			e.stopPropagation();
 			e.preventDefault();
@@ -60,29 +66,15 @@ export default function RichInput({
 				setInputState('SELECTING');
 			}
 		}
-	};
-
-	function inputTypingHandler() {
-		inputRef.current?.focus();
-		const range = document.createRange();
-		const selection = window.getSelection();
-		range.selectNodeContents(inputRef.current as HTMLDivElement);
-		range.collapse(false);
-		selection?.removeAllRanges();
-		selection?.addRange(range);
 	}
 
-	function inputSelectingHandler() {
-		inputRef.current?.blur();
-	}
-
-	const parseSearchQuery = useCallback(() => {
+	function parseSearchQuery(currentSpan: HTMLSpanElement | null, spanList: HTMLSpanElement[]) {
 		let firstHalf = '',
 			secondHalf = '';
-		const incrementable = parseInt(selectedSpan?.innerText || '', 10);
+		const incrementable = parseInt(currentSpan?.innerText || '', 10);
 		let flip = false;
-		inputValueSpans.current.forEach((span) => {
-			if (span === selectedSpan) {
+		spanList.forEach((span) => {
+			if (span === currentSpan) {
 				flip = true;
 				return;
 			}
@@ -92,16 +84,12 @@ export default function RichInput({
 				secondHalf += span.innerText;
 			}
 		});
-		setSearchQuery({
+		return {
 			firstHalf,
 			secondHalf,
 			incrementable,
-		});
-	}, [selectedSpan, setSearchQuery]);
-
-	const inputFinishedHandler = useCallback(() => {
-		parseSearchQuery();
-	}, [parseSearchQuery]);
+		};
+	}
 
 	useEffect(() => {
 		if (inputState === 'TYPING') {
@@ -111,112 +99,45 @@ export default function RichInput({
 		} else if (inputState === 'FINISHED') {
 			inputFinishedHandler();
 		}
-	}, [inputFinishedHandler, inputState, setSearchQuery]);
 
+		function inputFinishedHandler() {
+			setSearchQuery(parseSearchQuery(selectedSpanRef.current, inputValueSpans.current));
+		}
+		function inputTypingHandler() {
+			inputRef.current?.focus();
+			putCaretAtEnd(inputRef.current as HTMLDivElement);
+		}
+		function inputSelectingHandler() {
+			inputRef.current?.blur();
+		}
+	}, [inputState, setSearchQuery]);
+
+	//  Set container's height dynamically
 	useEffect(() => {
 		if (!containerRef.current) return;
 		containerRef.current.style.height = inputRef.current?.offsetHeight + 'px';
 	}, [inputValue]);
 
+	// Keyboard shortcuts
 	useEffect(() => {
-		const keypressHandler = (e: KeyboardEvent) => {
+		document.addEventListener('keypress', keypressHandler);
+
+		function keypressHandler(e: KeyboardEvent) {
 			if (e.key === '/') {
 				e.preventDefault();
 				setInputState('TYPING');
 			}
 			if (e.key === 'Enter') {
 				if (inputState === 'SELECTING' && inputValue !== '') {
-					initialContainerBBox.current = containerRef.current?.getBoundingClientRect();
 					setInputState('FINISHED');
 				}
 			}
-		};
-		document.addEventListener('keypress', keypressHandler);
-
+		}
 		return () => {
 			document.removeEventListener('keypress', keypressHandler);
 		};
-	}, [inputState, setInputState]);
+	}, [inputState, inputValue, setInputState]);
 
-	useLayoutEffect(() => {
-		const firstRect = initialContainerBBox.current;
-		const lastRect = containerRef.current?.getBoundingClientRect() ?? null;
-		if (!firstRect || !lastRect) return;
-
-		const oldMiddlePointX = firstRect.x + firstRect.width / 2;
-		const newMiddlePointX = lastRect.x + lastRect.width / 2;
-		const xToMiddleRatio = (oldMiddlePointX - firstRect.x) / firstRect.width;
-		const newX = newMiddlePointX * xToMiddleRatio;
-
-		const oldMiddlePointY = firstRect.y + firstRect.height / 2;
-		const newMiddlePointY = lastRect.y + lastRect.height / 2;
-		const yToMiddleRatio = (oldMiddlePointY - firstRect.y) / firstRect.height;
-		const newY = newMiddlePointY * yToMiddleRatio;
-		let x, y;
-		if (inputState === 'FINISHED') {
-			x = firstRect.x - newX;
-			({ y } = firstRect);
-		} else {
-			({ x } = lastRect);
-			x = x * -1;
-			y = newMiddlePointY * -1;
-		}
-		if (!containerRef.current) return;
-
-		// FIXME:
-		// 1. Redo calculation for x and y. Maybe straight up use the middle point of the container
-		// 2. Transformation is conflicted. First transform needs to be (-50,-50) but transform to property need to always be (0,0)
-		console.log('old');
-		console.log(firstRect);
-		console.log('new');
-		console.log(lastRect);
-		initialContainerBBox.current = lastRect ?? undefined;
-		const DEFAULT_TRANSFORM = {
-			typing: 'translate(0px, 0px) scale(.4)',
-			finished: 'translate(-50%, -50%) scale(1)',
-		};
-		containerSpringAPI.set({
-			transform: `translate(${x}px, ${y}px) scale(${inputState === 'FINISHED' ? 1 : 0.4})`,
-		});
-		console.log(containerRef.current.style.transform);
-
-		containerSpringAPI.start({
-			from: {
-				transform: `translate(${x}px, ${y}px) scale(${inputState === 'FINISHED' ? 1 : 0.4})`,
-			},
-			to: { transform: `translate(0,0) scale(${inputState === 'FINISHED' ? 0.4 : 1})` },
-			config: { mass: 1, tension: 400, friction: 20 },
-			onRest: (_result, ctrl) => {
-				ctrl.set({ transform: '' });
-			},
-		});
-	}, [inputState]);
-
-	function generateSpans() {
-		inputValueSpans.current = [];
-		numberInputSpans.current = [];
-
-		if (inputValue === '') return null;
-
-		const spans = inputValue.split(/\s/).map((word, index) => {
-			const isNumber = word.match(/^\s*\d+\s*$/g)?.length === 1;
-			return (
-				<span
-					ref={(el) => {
-						if (!el) return;
-						inputValueSpans.current.push(el as HTMLSpanElement);
-						if (isNumber) numberInputSpans.current.push(el as HTMLSpanElement);
-					}}
-					data-isnumber={isNumber}
-					className={`text-span ${inputState === 'SELECTING' ? 'selecting' : ''}`}
-					key={`word-${index}`}>
-					{`${word} `}
-				</span>
-			);
-		});
-
-		return spans;
-	}
 	return (
 		<animated.div
 			style={containerSpring}
@@ -245,7 +166,7 @@ export default function RichInput({
 				<div
 					className='span-container'
 					style={{ width: DEFAULT_WIDTH }}>
-					{generateSpans()}
+					{generateSpans(inputValueSpans, numberInputSpans, inputValue, inputState)}
 				</div>
 
 				<div
@@ -256,6 +177,7 @@ export default function RichInput({
 					onKeyDown={inputEnterHandler}
 					onBlur={() => setInputState('SELECTING')}
 					onFocus={() => setInputState('TYPING')}
+					onPaste={onPasteHandler}
 					contentEditable
 					suppressContentEditableWarning
 				/>
@@ -271,4 +193,43 @@ export default function RichInput({
 			/>
 		</animated.div>
 	);
+}
+
+function putCaretAtEnd(el: HTMLElement) {
+	const range = document.createRange();
+	const selection = window.getSelection();
+	range.selectNodeContents(el);
+	range.collapse(false);
+	selection?.removeAllRanges();
+	selection?.addRange(range);
+}
+
+function generateSpans(
+	inputSpansRef: React.MutableRefObject<HTMLSpanElement[]>,
+	numberSpansRef: React.MutableRefObject<HTMLSpanElement[]>,
+	inputValue: string,
+	inputState: InputState
+) {
+	inputSpansRef.current = [];
+	numberSpansRef.current = [];
+
+	if (inputValue === '') return null;
+	// console.log(JSON.stringify(inputValue));
+	const spans = inputValue.split(' ').map((word, index) => {
+		const isNumber = word.match(/^\s*\d+\s*$/g)?.length === 1;
+		return (
+			<span
+				ref={(el) => {
+					if (!el) return;
+					inputSpansRef.current.push(el as HTMLSpanElement);
+					if (isNumber) numberSpansRef.current.push(el as HTMLSpanElement);
+				}}
+				data-isnumber={isNumber}
+				className={`text-span ${inputState === 'SELECTING' ? 'selecting' : ''}`}
+				key={`${word}-${index}`}>
+				{`${word} `}
+			</span>
+		);
+	});
+	return spans;
 }

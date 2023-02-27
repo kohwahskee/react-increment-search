@@ -1,6 +1,6 @@
 import './App.scss';
 import './reset.css';
-import { useState } from 'react';
+import { cloneElement, useState } from 'react';
 import Bubble1 from './assets/Bubble 1.svg';
 import Bubble2 from './assets/Bubble 2.svg';
 import Bubble3 from './assets/Bubble 3.svg';
@@ -22,6 +22,7 @@ function App() {
 		secondHalf: '',
 		incrementable: null,
 	});
+
 	return (
 		<div className='App'>
 			<div className='bubble-container'>

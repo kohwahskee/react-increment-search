@@ -8,7 +8,7 @@ interface Props {
 	inputState: InputState;
 	numberInputSpans: HTMLSpanElement[];
 	singleCharacterWidth: number;
-	setSelectedSpan: React.Dispatch<React.SetStateAction<HTMLSpanElement | null>>;
+	setSelectedSpan: (span: HTMLSpanElement | null) => void;
 }
 
 export default function BubbleIndicator({
@@ -52,9 +52,6 @@ export default function BubbleIndicator({
 	const svgNewWidth = SVG_DEFAULT_WIDTH + bubbleState.length + EXTRA_HEIGHT * newAspectRatio;
 	const svgNewHeight = SVG_DEFAULT_HEIGHT + EXTRA_HEIGHT;
 
-	useEffect(() => {
-		setSelectedSpan(bubbleState.spanToAttach ?? numberInputSpans.at(-1) ?? null);
-	}, [bubbleState.spanToAttach, numberInputSpans, setSelectedSpan]);
 	function onMouseDown() {
 		document.addEventListener('mouseup', onMouseUp, { once: true });
 		document.addEventListener('mousemove', onMouseMove);
@@ -99,6 +96,10 @@ export default function BubbleIndicator({
 		setMousePosition({ x: e.clientX, y: e.clientY });
 		dispatchBubbleState({ type: 'setIsDragging', payload: true });
 	}
+
+	useEffect(() => {
+		setSelectedSpan(bubbleState.spanToAttach ?? numberInputSpans.at(-1) ?? null);
+	}, [bubbleState.spanToAttach, numberInputSpans, setSelectedSpan]);
 
 	return (
 		<animated.svg
