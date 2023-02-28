@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useRef } from 'react';
+import { FormEvent, useCallback, useEffect, useRef } from 'react';
 import { animated } from '@react-spring/web';
 import useInputAnimation from './useInputAnimation';
 import './style.scss';
@@ -41,32 +41,38 @@ export default function RichInput({
 	// To make sure input caret is in the center
 	const DEFAULT_WIDTH = inputValue === '' ? '1rem' : '90%';
 
-	function onInputHandler(e: FormEvent) {
-		const text = (e.target as HTMLDivElement).innerText;
-		// (e.target as HTMLDivElement).innerText = text.toString();
-		if (text === '\n') {
-			// contentEditable will add <br> when empty
-			setInputValue('');
-			return;
-		}
-		setInputValue(text);
-	}
+	const onInputHandler = useCallback(
+		(e: FormEvent) => {
+			const text = (e.target as HTMLDivElement).innerText;
+			// (e.target as HTMLDivElement).innerText = text.toString();
+			if (text === '\n') {
+				// contentEditable will add <br> when empty
+				setInputValue('');
+				return;
+			}
+			setInputValue(text);
+		},
+		[setInputValue]
+	);
 
-	function onPasteHandler(e: React.ClipboardEvent) {
+	const onPasteHandler = useCallback((e: React.ClipboardEvent) => {
 		e.preventDefault();
 		const plainText = e.clipboardData.getData('text/plain').replaceAll(/\n+/g, ' ');
 		document.execCommand('insertText', false, plainText);
-	}
+	}, []);
 
-	function inputEnterHandler(e: React.KeyboardEvent) {
-		if (e.key === 'Enter') {
-			e.stopPropagation();
-			e.preventDefault();
-			if (inputState === 'TYPING') {
-				setInputState('SELECTING');
+	const inputEnterHandler = useCallback(
+		(e: React.KeyboardEvent) => {
+			if (e.key === 'Enter') {
+				e.stopPropagation();
+				e.preventDefault();
+				if (inputState === 'TYPING') {
+					setInputState('SELECTING');
+				}
 			}
-		}
-	}
+		},
+		[inputState, setInputState]
+	);
 
 	function parseSearchQuery(currentSpan: HTMLSpanElement | null, spanList: HTMLSpanElement[]) {
 		let firstHalf = '',
@@ -92,12 +98,18 @@ export default function RichInput({
 	}
 
 	useEffect(() => {
-		if (inputState === 'TYPING') {
-			inputTypingHandler();
-		} else if (inputState === 'SELECTING') {
-			inputSelectingHandler();
-		} else if (inputState === 'FINISHED') {
-			inputFinishedHandler();
+		switch (inputState) {
+			case 'TYPING':
+				inputTypingHandler();
+				break;
+			case 'SELECTING':
+				inputSelectingHandler();
+				break;
+			case 'FINISHED':
+				inputFinishedHandler();
+				break;
+			default:
+				break;
 		}
 
 		function inputFinishedHandler() {
@@ -123,14 +135,20 @@ export default function RichInput({
 		document.addEventListener('keypress', keypressHandler);
 
 		function keypressHandler(e: KeyboardEvent) {
-			if (e.key === '/') {
-				e.preventDefault();
-				setInputState('TYPING');
-			}
-			if (e.key === 'Enter') {
-				if (inputState === 'SELECTING' && inputValue !== '') {
-					setInputState('FINISHED');
+			switch (e.key) {
+				case '/': {
+					e.preventDefault();
+					setInputState('TYPING');
+					break;
 				}
+				case 'Enter': {
+					if (inputState === 'SELECTING' && inputValue !== '') {
+						setInputState('FINISHED');
+					}
+					break;
+				}
+				default:
+					break;
 			}
 		}
 		return () => {
