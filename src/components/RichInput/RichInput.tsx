@@ -202,10 +202,6 @@ export default function RichInput({
 			</div>
 			<BubbleIndicator
 				setSelectedSpan={setSelectedSpan}
-				singleCharacterWidth={
-					(placeHolderRef.current?.getBoundingClientRect().width || 0) /
-					(placeHolderRef.current?.innerText.length || 0)
-				}
 				inputState={inputState}
 				numberInputSpans={numberInputSpans.current}
 			/>
@@ -233,7 +229,7 @@ function generateSpans(
 
 	if (inputValue === '') return null;
 	// console.log(JSON.stringify(inputValue));
-	const spans = inputValue.split(' ').map((word, index) => {
+	const spans = inputValue.match(/\s+|\S+/g)?.map((word, index) => {
 		const isNumber = word.match(/^\s*\d+\s*$/g)?.length === 1;
 		return (
 			<span
@@ -245,7 +241,7 @@ function generateSpans(
 				data-isnumber={isNumber}
 				className={`text-span ${inputState === 'SELECTING' ? 'selecting' : ''}`}
 				key={`${word}-${index}`}>
-				{`${word} `}
+				{`${word}`}
 			</span>
 		);
 	});

@@ -16,8 +16,7 @@ export default function useUpdateBubbleState(
 	mousePosition: { x: number; y: number },
 	inputState: InputState,
 	bubbleIndicatorRef: React.RefObject<SVGSVGElement>,
-	numberInputSpans: HTMLSpanElement[],
-	singleCharacterWidth: number
+	numberInputSpans: HTMLSpanElement[]
 ) {
 	const [bubbleState, dispatchBubbleState] = useReducer(bubbleReducer, bubbleInitialState);
 
@@ -31,7 +30,6 @@ export default function useUpdateBubbleState(
 				type: 'updateBubbleOnSpan',
 				payload: {
 					numberInputSpans,
-					singleCharacterWidth,
 					spanToAttach: bubbleState.spanToAttach,
 					bubbleIndicator: bubbleIndicatorRef.current,
 				},
@@ -42,13 +40,7 @@ export default function useUpdateBubbleState(
 		} else {
 			dispatchBubbleState({ type: 'resetBubble' });
 		}
-	}, [
-		inputState,
-		bubbleState.spanToAttach,
-		numberInputSpans,
-		singleCharacterWidth,
-		bubbleIndicatorRef,
-	]);
+	}, [inputState, bubbleState.spanToAttach, numberInputSpans, bubbleIndicatorRef]);
 
 	useLayoutEffect(() => {
 		if (!bubbleState.isDragging) {
@@ -59,7 +51,6 @@ export default function useUpdateBubbleState(
 					type: 'updateBubbleOnSpan',
 					payload: {
 						numberInputSpans,
-						singleCharacterWidth,
 						bubbleIndicator: bubbleIndicatorRef.current,
 						spanToAttach: bubbleState.spanToAttach,
 					},
@@ -84,7 +75,6 @@ export default function useUpdateBubbleState(
 		inputState,
 		mousePosition,
 		numberInputSpans,
-		singleCharacterWidth,
 	]);
 
 	// When mouse position changes, update bubble state

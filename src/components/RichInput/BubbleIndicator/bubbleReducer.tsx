@@ -14,7 +14,6 @@ type BubbleReducerAction =
 				spanToAttach: HTMLSpanElement | null;
 				bubbleIndicator: SVGElement | null;
 				numberInputSpans: HTMLSpanElement[];
-				singleCharacterWidth: number;
 			};
 	  }
 	| {
@@ -63,8 +62,7 @@ export default function bubbleReducer(state: BubbleState, action: BubbleReducerA
 				...getBubbleStateOnSpan(
 					action.payload.spanToAttach,
 					action.payload.bubbleIndicator,
-					action.payload.numberInputSpans,
-					action.payload.singleCharacterWidth
+					action.payload.numberInputSpans
 				),
 			};
 		case 'updateBubbleOnMouse':
@@ -118,28 +116,23 @@ function getBubblePosition(
 function getBubbleStateOnSpan(
 	currentSpan: HTMLSpanElement | null,
 	bubble: SVGElement | null,
-	numberInputSpans: HTMLSpanElement[],
-	singleCharacterWidth: number
+	numberInputSpans: HTMLSpanElement[]
 ): Partial<BubbleState> {
 	if (!currentSpan) currentSpan = numberInputSpans[numberInputSpans.length - 1];
 	if (numberInputSpans.length === 0) return {};
 	const spanRect = currentSpan.getBoundingClientRect();
 	const parentRect = bubble?.parentElement?.getBoundingClientRect();
-	const spanList = currentSpan.innerText?.split('') || [];
-	const spanWithNumbers = spanList.filter((char) => !isNaN(parseInt(char)));
 	const bubbleWidth = bubble?.getBoundingClientRect().width || 0;
 	if (!parentRect) return {};
-	// Word-wrap: break-word; makes the span smaller than the actual width of the text, including " " when a word is at the end of the line when line break happens.
-	// To avoid this, grab with of a single character (width of placeholder / innerText.length) and multiply it by the number of characters
-	const realWidth = singleCharacterWidth * spanWithNumbers.length;
+	const spanWidth = spanRect.width;
 	const top = ((spanRect.y - parentRect?.y + spanRect?.height / 2) / parentRect.height) * 100;
 	const left =
-		((spanRect.x - parentRect?.x + realWidth / 2 - bubbleWidth / 2) / parentRect.width) * 100;
+		((spanRect.x - parentRect?.x + spanWidth / 2 - bubbleWidth / 2) / parentRect.width) * 100;
 
 	return {
 		top,
 		left,
 		height: spanRect.height,
-		length: -17 + 20 * (spanWithNumbers.length - 1),
+		length: -17 + 20 * (currentSpan.innerText.length - 1),
 	};
 }

@@ -7,16 +7,10 @@ import './style.scss';
 interface Props {
 	inputState: InputState;
 	numberInputSpans: HTMLSpanElement[];
-	singleCharacterWidth: number;
 	setSelectedSpan: (span: HTMLSpanElement | null) => void;
 }
 
-export default function BubbleIndicator({
-	numberInputSpans,
-	inputState,
-	singleCharacterWidth,
-	setSelectedSpan,
-}: Props) {
+export default function BubbleIndicator({ numberInputSpans, inputState, setSelectedSpan }: Props) {
 	const bubbleIndicatorRef = useRef<SVGSVGElement>(null);
 	const hoveringSpan = useRef<HTMLSpanElement>();
 
@@ -26,8 +20,7 @@ export default function BubbleIndicator({
 		mousePosition,
 		inputState,
 		bubbleIndicatorRef,
-		numberInputSpans,
-		singleCharacterWidth
+		numberInputSpans
 	);
 
 	const bubbleAnimation = useSpring({
