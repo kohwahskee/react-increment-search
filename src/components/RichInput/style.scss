@@ -68,10 +68,9 @@
   user-select: none;
   z-index: 0;
 
-  span {
-    // white-space: pre-wrap;
-    outline: 1px solid white;
-  }
+  // span {
+  //   // white-space: pre-wrap;
+  //   outline: 1px solid white; }
 
   span.selecting {
     pointer-events: auto;

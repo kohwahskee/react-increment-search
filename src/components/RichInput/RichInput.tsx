@@ -8,7 +8,7 @@ import { InputState } from '../Utils/TypesExport';
 interface SearchQuery {
 	firstHalf: string;
 	secondHalf: string;
-	incrementable: number | null;
+	incrementable: number;
 }
 interface Props {
 	inputValue: [string, React.Dispatch<React.SetStateAction<string>>];
@@ -32,6 +32,7 @@ export default function RichInput({
 		selectedSpanRef.current = span;
 	};
 
+	const tempInputValue = useRef<string | null>(null);
 	const inputRef = useRef<HTMLDivElement>(null);
 	const containerRef = useRef<HTMLDivElement>(null);
 	const placeHolderRef = useRef<HTMLDivElement>(null);
@@ -113,16 +114,45 @@ export default function RichInput({
 		}
 
 		function inputFinishedHandler() {
-			setSearchQuery(parseSearchQuery(selectedSpanRef.current, inputValueSpans.current));
+			const searchQuery = parseSearchQuery(selectedSpanRef.current, inputValueSpans.current);
+			setSearchQuery(searchQuery);
+			const STRING_LENGTH_LIMIT = 25;
+
+			setInputValue((prev) => {
+				let shortenedString: string;
+				if (inputValue.length <= STRING_LENGTH_LIMIT) return prev;
+				if (Number.isNaN(searchQuery.incrementable)) {
+					shortenedString = `${searchQuery.firstHalf.slice(0, STRING_LENGTH_LIMIT)}...`;
+				} else {
+					shortenedString = `${searchQuery.firstHalf.slice(0, STRING_LENGTH_LIMIT / 2)}...${
+						searchQuery.incrementable
+					}${
+						searchQuery.secondHalf !== ''
+							? `...${searchQuery.secondHalf.slice(
+									searchQuery.secondHalf.length - STRING_LENGTH_LIMIT / 2
+							  )}`
+							: ''
+					}`;
+				}
+				(inputRef.current as HTMLDivElement).innerText = shortenedString;
+				return shortenedString;
+			});
 		}
 		function inputTypingHandler() {
 			inputRef.current?.focus();
+			if (tempInputValue.current !== null) {
+				setInputValue(tempInputValue.current);
+				(inputRef.current as HTMLDivElement).innerText = tempInputValue.current;
+				tempInputValue.current = null;
+			}
 			putCaretAtEnd(inputRef.current as HTMLDivElement);
 		}
 		function inputSelectingHandler() {
 			inputRef.current?.blur();
+			tempInputValue.current = inputValue;
 		}
-	}, [inputState, setSearchQuery]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [inputState, setInputValue, setSearchQuery]);
 
 	//  Set container's height dynamically
 	useEffect(() => {
@@ -196,6 +226,7 @@ export default function RichInput({
 					onBlur={() => setInputState('SELECTING')}
 					onFocus={() => setInputState('TYPING')}
 					onPaste={onPasteHandler}
+					spellCheck={false}
 					contentEditable
 					suppressContentEditableWarning
 				/>

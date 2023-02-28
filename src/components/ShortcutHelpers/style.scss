@@ -1,13 +1,14 @@
 .shortcut-helpers {
   position: absolute;
   left: 50%;
-  bottom: 1%;
+  top: auto;
+  bottom: 0;
   transform: translate(-50%);
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 70%;
-  height: 10rem;
+  // min-height: 10rem;
+  max-height: 15rem;
   // outline: 1px solid white;
   padding: 1rem;
   font-family: 'AnonymousPro';
@@ -16,18 +17,4 @@
   flex-direction: column;
   gap: 1.5rem;
 
-
-  h3 {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: rgba(255, 255, 255, 0.7);
-    transition: opacity 200ms ease-out;
-  }
-
-  .helper-icon {
-    margin-right: 1rem;
-    width: 5rem;
-    user-select: none;
-  }
 }

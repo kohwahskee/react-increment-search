@@ -62,6 +62,7 @@ export default function BubbleIndicator({ numberInputSpans, inputState, setSelec
 
 	function onMouseMove(e: MouseEvent) {
 		draggingHandler(e);
+		if (bubbleIndicatorRef.current) bubbleIndicatorRef.current.style.animation = 'none';
 	}
 
 	function draggingHandler(e: MouseEvent) {

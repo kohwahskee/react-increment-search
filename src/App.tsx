@@ -7,11 +7,12 @@ import Bubble3 from './assets/Bubble 3.svg';
 import Bubble4 from './assets/Bubble 4.svg';
 import RichInput from './components/RichInput/RichInput';
 import ShortcutHelpers from './components/ShortcutHelpers/ShortcutHelpers';
+import HelperText from './components/ShortcutHelpers/HelperText/HelperText';
 import { InputState } from './components/Utils/TypesExport';
 interface SearchQuery {
 	firstHalf: string;
 	secondHalf: string;
-	incrementable: number | null;
+	incrementable: number;
 }
 
 function App() {
@@ -20,7 +21,7 @@ function App() {
 	const [searchQuery, setSearchQuery] = useState<SearchQuery>({
 		firstHalf: '',
 		secondHalf: '',
-		incrementable: null,
+		incrementable: NaN,
 	});
 
 	return (
@@ -53,8 +54,7 @@ function App() {
 				inputState={[inputState, setInputState]}
 				setSearchQuery={setSearchQuery}
 			/>
-			<ShortcutHelpers inputState={inputState} />
-			<div className='enter-icon'>Enter</div>
+			{inputState !== 'FINISHED' && <ShortcutHelpers inputState={inputState} />}
 		</div>
 	);
 }

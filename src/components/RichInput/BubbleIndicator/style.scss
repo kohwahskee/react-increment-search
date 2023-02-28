@@ -7,4 +7,24 @@ svg {
   cursor: grab;
   z-index: -10;
   transform-origin: center;
+  animation: bubble 1000ms infinite;
+
+}
+
+@keyframes bubble {
+  0% {
+    transform: rotate(0deg) translate(0, -50%);
+  }
+
+  25% {
+    transform: rotate(3deg) translate(0, -50%);
+  }
+
+  50% {
+    transform: rotate(-3deg) translate(0, -50%);
+  }
+
+  100% {
+    transform: rotate(0deg) translate(0, -50%);
+  }
 }
