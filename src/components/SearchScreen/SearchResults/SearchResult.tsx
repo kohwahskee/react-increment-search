@@ -1,4 +1,4 @@
-import { SpringValue } from '@react-spring/web';
+import { SpringValue, animated } from '@react-spring/web';
 import { useEffect, useRef, useState } from 'react';
 import './style.scss';
 
@@ -9,20 +9,15 @@ interface Props {
 
 export default function SearchResult({ setActiveResult, scrollSpring }: Props) {
 	const searchResultRef = useRef<HTMLDivElement>(null);
-	const [scale, setScale] = useState(1);
-	const [opacity, setOpacity] = useState(1);
-	const previousCenterPoint = useRef(0);
 
 	useEffect(() => {
 		if (!searchResultRef.current) return;
-		previousCenterPoint.current =
-			searchResultRef.current?.getBoundingClientRect().top +
-			searchResultRef.current?.getBoundingClientRect().height / 2;
+		searchResultRef.current.style.transform = getScaleFromDistance();
 	}, []);
 
-	useEffect(() => {
-		console.log('rendered');
-		if (!(searchResultRef.current && searchResultRef.current.parentElement?.parentElement)) return;
+	function getScaleFromDistance() {
+		if (!(searchResultRef.current && searchResultRef.current.parentElement?.parentElement))
+			return 'scale(1)';
 
 		const parentEl = searchResultRef.current.parentElement.parentElement;
 		const parentRect = parentEl.getBoundingClientRect();
@@ -31,18 +26,18 @@ export default function SearchResult({ setActiveResult, scrollSpring }: Props) {
 		const elCenterPoint = elRect.top + elRect.height / 2;
 
 		const distanceFromCenter = Math.abs(centerPoint - elCenterPoint);
-
-		if (elCenterPoint !== previousCenterPoint.current) {
-			setScale(1 - (distanceFromCenter / 1000) * 1.5);
-			// setOpacity(1 - (distanceFromCenter / 1000) * 3);
-		}
-		previousCenterPoint.current = elCenterPoint;
-	}, [scrollSpring]);
+		return `scale(${Math.max(
+			0,
+			Math.min(1, 1 - (Math.pow(0.008 * distanceFromCenter, 2) * 1) / 9)
+		)})`;
+	}
 
 	return (
-		<div
+		<animated.div
 			className='search-result'
-			style={{ transform: `scale(${scale})`, opacity: opacity }}
+			style={{
+				transform: scrollSpring.y.to(() => getScaleFromDistance()).to((x) => x),
+			}}
 			ref={searchResultRef}>
 			<div className='search-result-content'>
 				<h1 className='search-index-number'>123</h1>
@@ -53,6 +48,6 @@ export default function SearchResult({ setActiveResult, scrollSpring }: Props) {
 					Lorem ipsum dolor sit amet consectetur adipisicing elit.
 				</a>
 			</div>
-		</div>
+		</animated.div>
 	);
 }
