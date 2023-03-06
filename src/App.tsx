@@ -1,14 +1,14 @@
 import './App.scss';
 import './reset.css';
-import { cloneElement, useState } from 'react';
+import { useState } from 'react';
 import Bubble1 from './assets/Bubble 1.svg';
 import Bubble2 from './assets/Bubble 2.svg';
 import Bubble3 from './assets/Bubble 3.svg';
 import Bubble4 from './assets/Bubble 4.svg';
 import RichInput from './components/RichInput/RichInput';
 import ShortcutHelpers from './components/ShortcutHelpers/ShortcutHelpers';
-import HelperText from './components/ShortcutHelpers/HelperText/HelperText';
 import { InputState } from './components/Utils/TypesExport';
+import SearchScreen from './components/SearchScreen/SearchScreen';
 interface SearchQuery {
 	firstHalf: string;
 	secondHalf: string;
@@ -23,7 +23,6 @@ function App() {
 		secondHalf: '',
 		incrementable: NaN,
 	});
-
 	return (
 		<div className='App'>
 			<div className='bubble-container'>
@@ -49,12 +48,16 @@ function App() {
 				/>
 				<div className='darken-bg' />
 			</div>
+
 			<RichInput
 				inputValue={[inputValue, setInputValue]}
 				inputState={[inputState, setInputState]}
 				setSearchQuery={setSearchQuery}
 			/>
+
 			{inputState !== 'FINISHED' && <ShortcutHelpers inputState={inputState} />}
+
+			<SearchScreen />
 		</div>
 	);
 }

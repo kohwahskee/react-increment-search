@@ -73,7 +73,7 @@ export default function BubbleIndicator({ numberInputSpans, inputState, setSelec
 		};
 		numberInputSpans.forEach((span) => {
 			const spanRect = span.getBoundingClientRect();
-			const BOUND_THRESHOLD = 0;
+			const BOUND_THRESHOLD = 0; // in pixels
 			if (
 				bubbleCenter.x > spanRect.left - BOUND_THRESHOLD &&
 				bubbleCenter.x < spanRect.right + BOUND_THRESHOLD &&
