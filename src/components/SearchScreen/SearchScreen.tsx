@@ -103,6 +103,30 @@ export default function SearchScreen() {
 					setActiveResult={setActiveResult}
 					scrollSpring={scrollYAnimation}
 				/>
+				<SearchResult
+					setActiveResult={setActiveResult}
+					scrollSpring={scrollYAnimation}
+				/>
+				<SearchResult
+					setActiveResult={setActiveResult}
+					scrollSpring={scrollYAnimation}
+				/>
+				<SearchResult
+					setActiveResult={setActiveResult}
+					scrollSpring={scrollYAnimation}
+				/>
+				<SearchResult
+					setActiveResult={setActiveResult}
+					scrollSpring={scrollYAnimation}
+				/>
+				<SearchResult
+					setActiveResult={setActiveResult}
+					scrollSpring={scrollYAnimation}
+				/>
+				<SearchResult
+					setActiveResult={setActiveResult}
+					scrollSpring={scrollYAnimation}
+				/>
 			</animated.div>
 		</div>
 	);
