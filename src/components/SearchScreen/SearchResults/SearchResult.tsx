@@ -33,7 +33,7 @@ export default function SearchResult({ setActiveResult, scrollSpring }: Props) {
 		const distanceFromCenter = Math.abs(centerPoint - elCenterPoint);
 
 		if (elCenterPoint !== previousCenterPoint.current) {
-			setScale(1 - (distanceFromCenter / 1000) * 1.5);
+			setScale(Math.max(0, Math.min(1, 1 - (Math.pow(0.008 * distanceFromCenter, 2) * 1) / 9)));
 			// setOpacity(1 - (distanceFromCenter / 1000) * 3);
 		}
 		previousCenterPoint.current = elCenterPoint;
