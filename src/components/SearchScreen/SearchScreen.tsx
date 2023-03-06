@@ -41,7 +41,6 @@ export default function SearchScreen() {
 		const centerPoint = parentRect.top + parentRect.height / 2;
 		const elCenterPoint = elRect.top + elRect.height / 2;
 
-		console.log(centerPoint - elCenterPoint);
 		return centerPoint - elCenterPoint;
 	}
 
@@ -55,46 +54,6 @@ export default function SearchScreen() {
 				style={scrollYAnimation}
 				ref={containerRef}
 				className='search-results-wrapper'>
-				<SearchResult
-					setActiveResult={setActiveResult}
-					scrollSpring={scrollYAnimation}
-				/>
-				<SearchResult
-					setActiveResult={setActiveResult}
-					scrollSpring={scrollYAnimation}
-				/>
-				<SearchResult
-					setActiveResult={setActiveResult}
-					scrollSpring={scrollYAnimation}
-				/>
-				<SearchResult
-					setActiveResult={setActiveResult}
-					scrollSpring={scrollYAnimation}
-				/>
-				<SearchResult
-					setActiveResult={setActiveResult}
-					scrollSpring={scrollYAnimation}
-				/>
-				<SearchResult
-					setActiveResult={setActiveResult}
-					scrollSpring={scrollYAnimation}
-				/>
-				<SearchResult
-					setActiveResult={setActiveResult}
-					scrollSpring={scrollYAnimation}
-				/>
-				<SearchResult
-					setActiveResult={setActiveResult}
-					scrollSpring={scrollYAnimation}
-				/>
-				<SearchResult
-					setActiveResult={setActiveResult}
-					scrollSpring={scrollYAnimation}
-				/>
-				<SearchResult
-					setActiveResult={setActiveResult}
-					scrollSpring={scrollYAnimation}
-				/>
 				<SearchResult
 					setActiveResult={setActiveResult}
 					scrollSpring={scrollYAnimation}

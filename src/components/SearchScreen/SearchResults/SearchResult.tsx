@@ -9,23 +9,13 @@ interface Props {
 
 export default function SearchResult({ setActiveResult, scrollSpring }: Props) {
 	const searchResultRef = useRef<HTMLDivElement>(null);
-	const initialDistanceFromCenter = useRef<number>(0);
+
 	useEffect(() => {
 		if (!searchResultRef.current) return;
-		const parentEl = searchResultRef.current.parentElement?.parentElement;
-		if (!parentEl) return;
-		const parentRect = parentEl.getBoundingClientRect();
-		const elRect = searchResultRef.current.getBoundingClientRect();
-		const centerPoint = parentRect.top + parentRect.height / 2;
-		const elCenterPoint = elRect.top + elRect.height / 2;
-
-		// console.log(elCenterPoint);
-		initialDistanceFromCenter.current = Math.abs(centerPoint - elCenterPoint);
 		searchResultRef.current.style.transform = getScaleFromDistance();
 	}, []);
 
-	function getScaleFromDistance(value?: number) {
-		console.log(value);
+	function getScaleFromDistance() {
 		if (!(searchResultRef.current && searchResultRef.current.parentElement?.parentElement))
 			return 'scale(1)';
 
@@ -36,7 +26,9 @@ export default function SearchResult({ setActiveResult, scrollSpring }: Props) {
 		const elCenterPoint = elRect.top + elRect.height / 2;
 		const distanceFromCenter = Math.abs(centerPoint - elCenterPoint);
 
-		return `scale(${1 - (distanceFromCenter / 1000) * 2})`;
+		if (elCenterPoint < parentRect.top || elCenterPoint > parentRect.bottom) return 'scale(0)';
+
+		return `scale(${Math.max(0, Math.min(1, 1 - Math.pow(0.003 * distanceFromCenter, 2)))})`;
 	}
 
 	return (
