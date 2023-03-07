@@ -49,13 +49,13 @@ function App() {
 				<div className='darken-bg' />
 			</div>
 
-			<RichInput
+			{/* <RichInput
 				inputValue={[inputValue, setInputValue]}
 				inputState={[inputState, setInputState]}
 				setSearchQuery={setSearchQuery}
 			/>
 
-			{inputState !== 'FINISHED' && <ShortcutHelpers inputState={inputState} />}
+			{inputState !== 'FINISHED' && <ShortcutHelpers inputState={inputState} />} */}
 
 			<SearchScreen />
 		</div>
