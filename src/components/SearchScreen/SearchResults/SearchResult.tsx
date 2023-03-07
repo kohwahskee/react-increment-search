@@ -77,6 +77,6 @@ function getScaleFromDistance(
 
 	if (elCenterPoint < parentRect.top || elCenterPoint > parentRect.bottom) return 0;
 
-	// return Math.max(0, Math.min(1, 1 - Math.pow(0.003 * distanceFromCenter, 2)));
-	return Math.max(0, Math.min(1, 1 - (distanceFromCenter / 1000) * 2));
+	return Math.max(0, Math.min(1, 1 - Math.pow(0.003 * distanceFromCenter, 2)));
+	// return Math.max(0, Math.min(1, 1 - (distanceFromCenter / 1000) * 2));
 }
