@@ -1,14 +1,12 @@
 import './App.scss';
 import './reset.css';
+import { animated, useTransition } from '@react-spring/web';
 import { useState } from 'react';
-import Bubble1 from './assets/Bubble 1.svg';
-import Bubble2 from './assets/Bubble 2.svg';
-import Bubble3 from './assets/Bubble 3.svg';
-import Bubble4 from './assets/Bubble 4.svg';
 import RichInput from './components/RichInput/RichInput';
+import SearchScreen from './components/SearchScreen/SearchScreen';
 import ShortcutHelpers from './components/ShortcutHelpers/ShortcutHelpers';
 import { InputState } from './components/Utils/TypesExport';
-import SearchScreen from './components/SearchScreen/SearchScreen';
+
 interface SearchQuery {
 	firstHalf: string;
 	secondHalf: string;
@@ -18,46 +16,43 @@ interface SearchQuery {
 function App() {
 	const [inputState, setInputState] = useState<InputState>(null);
 	const [inputValue, setInputValue] = useState('');
+	const [optionShown, setOptionShown] = useState(false);
 	const [searchQuery, setSearchQuery] = useState<SearchQuery>({
 		firstHalf: '',
 		secondHalf: '',
 		incrementable: NaN,
 	});
+	const searchScreenTransition = useTransition(inputState === 'FINISHED', {
+		from: { transform: 'translate3d(-50%, 0%, 0)', opacity: 0 },
+		enter: { transform: 'translate3d(-50%, 0%, 0)', opacity: 1 },
+		leave: { transform: 'translate3d(-50%, 20%, 0)', opacity: 0 },
+	});
+
+	const AnimatedSearchScreen = animated(SearchScreen);
+
 	return (
 		<div className='App'>
-			<div className='bubble-container'>
-				<img
-					src={Bubble1}
-					className='bubble-decor'
-					id='bubble1'
-				/>
-				<img
-					src={Bubble2}
-					className='bubble-decor'
-					id='bubble2'
-				/>
-				<img
-					src={Bubble3}
-					className='bubble-decor'
-					id='bubble3'
-				/>
-				<img
-					src={Bubble4}
-					className='bubble-decor'
-					id='bubble4'
-				/>
-				<div className='darken-bg' />
+			<div className='circle-container'>
+				<div className={`pink-circle ${inputState === 'FINISHED' ? 'finished' : ''}`} />
+				<div className={`purple-circle ${inputState === 'FINISHED' ? 'finished' : ''}`} />
+				<div className={`red-circle ${inputState === 'FINISHED' ? 'finished' : ''}`} />
 			</div>
 
-			{/* <RichInput
+			<RichInput
 				inputValue={[inputValue, setInputValue]}
 				inputState={[inputState, setInputState]}
 				setSearchQuery={setSearchQuery}
 			/>
 
-			{inputState !== 'FINISHED' && <ShortcutHelpers inputState={inputState} />} */}
+			<button
+				onClick={() => setOptionShown((prev) => !prev)}
+				className='option-button'>
+				{optionShown ? 'Back' : 'Options'}
+			</button>
 
-			<SearchScreen />
+			{inputState !== 'FINISHED' && <ShortcutHelpers inputState={inputState} />}
+
+			{searchScreenTransition((style, show) => show && <AnimatedSearchScreen style={style} />)}
 		</div>
 	);
 }

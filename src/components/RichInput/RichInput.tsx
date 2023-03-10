@@ -1,5 +1,5 @@
-import { FormEvent, useCallback, useEffect, useRef } from 'react';
 import { animated } from '@react-spring/web';
+import { FormEvent, useCallback, useEffect, useRef } from 'react';
 import useInputAnimation from './useInputAnimation';
 import './style.scss';
 import BubbleIndicator from './BubbleIndicator/BubbleIndicator';
@@ -45,7 +45,6 @@ export default function RichInput({
 	const onInputHandler = useCallback(
 		(e: FormEvent) => {
 			const text = (e.target as HTMLDivElement).innerText;
-			// (e.target as HTMLDivElement).innerText = text.toString();
 			if (text === '\n') {
 				// contentEditable will add <br> when empty
 				setInputValue('');
@@ -98,6 +97,7 @@ export default function RichInput({
 		};
 	}
 
+	// Handle input state change
 	useEffect(() => {
 		switch (inputState) {
 			case 'TYPING':
@@ -117,26 +117,12 @@ export default function RichInput({
 			const searchQuery = parseSearchQuery(selectedSpanRef.current, inputValueSpans.current);
 			setSearchQuery(searchQuery);
 			const STRING_LENGTH_LIMIT = 25;
+			const shortenedString = shortenQuery(searchQuery, STRING_LENGTH_LIMIT);
 
-			setInputValue((prev) => {
-				let shortenedString: string;
-				if (inputValue.length <= STRING_LENGTH_LIMIT) return prev;
-				if (Number.isNaN(searchQuery.incrementable)) {
-					shortenedString = `${searchQuery.firstHalf.slice(0, STRING_LENGTH_LIMIT)}...`;
-				} else {
-					shortenedString = `${searchQuery.firstHalf.slice(0, STRING_LENGTH_LIMIT / 2)}...${
-						searchQuery.incrementable
-					}${
-						searchQuery.secondHalf !== ''
-							? `...${searchQuery.secondHalf.slice(
-									searchQuery.secondHalf.length - STRING_LENGTH_LIMIT / 2
-							  )}`
-							: ''
-					}`;
-				}
+			if (inputValue.length > STRING_LENGTH_LIMIT) {
+				setInputValue(shortenedString);
 				(inputRef.current as HTMLDivElement).innerText = shortenedString;
-				return shortenedString;
-			});
+			}
 		}
 		function inputTypingHandler() {
 			inputRef.current?.focus();
@@ -249,6 +235,21 @@ function putCaretAtEnd(el: HTMLElement) {
 	selection?.addRange(range);
 }
 
+function shortenQuery(query: SearchQuery, limit: number) {
+	let shortenedString: string;
+	if (Number.isNaN(query.incrementable)) {
+		shortenedString = `${query.firstHalf.slice(0, limit)}...`;
+	} else {
+		const firstHalf = query.firstHalf.slice(0, limit / 2);
+		const secondHalf = query.secondHalf.slice((limit / 2) * -1);
+		const { incrementable } = query;
+		shortenedString = `${firstHalf}...${incrementable}${
+			query.secondHalf.length > limit / 2 ? '...' : ''
+		} ${secondHalf}`;
+	}
+	return shortenedString;
+}
+
 function generateSpans(
 	inputSpansRef: React.MutableRefObject<HTMLSpanElement[]>,
 	numberSpansRef: React.MutableRefObject<HTMLSpanElement[]>,
@@ -259,7 +260,6 @@ function generateSpans(
 	numberSpansRef.current = [];
 
 	if (inputValue === '') return null;
-	// console.log(JSON.stringify(inputValue));
 	const spans = inputValue.match(/\s+|\S+/g)?.map((word, index) => {
 		const isNumber = word.match(/^\s*\d+\s*$/g)?.length === 1;
 		return (

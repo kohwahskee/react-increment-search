@@ -1,6 +1,6 @@
-import { InputState, BubbleState } from '../../Utils/TypesExport';
-import { useReducer, useEffect, useLayoutEffect } from 'react';
+import { useEffect, useLayoutEffect, useReducer } from 'react';
 import bubbleReducer from './bubbleReducer';
+import { BubbleState, InputState } from '../../Utils/TypesExport';
 
 const bubbleInitialState: BubbleState = {
 	top: 0,
@@ -35,7 +35,6 @@ export default function useUpdateBubbleState(
 				},
 			});
 		} else if (inputState === 'FINISHED') {
-			console.log('finished');
 			dispatchBubbleState({ type: 'setBubbleVisiblity', payload: false });
 		} else {
 			dispatchBubbleState({ type: 'resetBubble' });

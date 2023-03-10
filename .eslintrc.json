@@ -52,6 +52,42 @@
 		"@typescript-eslint/no-unused-vars": ["error"],
 		"@typescript-eslint/no-use-before-define": "off",
 		"prefer-destructuring": "warn",
-		"import/no-extraneous-dependencies": "off"
+		"import/no-extraneous-dependencies": "off",
+		"sort-imports": [
+			"error",
+			{
+				"ignoreDeclarationSort": true
+			}
+		],
+		"import/order": [
+			1,
+			{
+				"groups": ["external", "builtin", "internal", "sibling", "parent", "index"],
+				"pathGroups": [
+					{
+						"pattern": "components",
+						"group": "internal"
+					},
+					{
+						"pattern": "common",
+						"group": "internal"
+					},
+					{
+						"pattern": "routes/ **",
+						"group": "internal"
+					},
+					{
+						"pattern": "assets/**",
+						"group": "internal",
+						"position": "after"
+					}
+				],
+				"pathGroupsExcludedImportTypes": ["internal"],
+				"alphabetize": {
+					"order": "asc",
+					"caseInsensitive": true
+				}
+			}
+		]
 	}
 }

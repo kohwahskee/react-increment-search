@@ -1,9 +1,17 @@
 import './style.scss';
-import SearchResult from './SearchResults/SearchResult';
 import { useSpringValue } from '@react-spring/web';
-import { useEffect, useRef, useState, WheelEvent } from 'react';
+import { CSSProperties, WheelEvent, useEffect, useRef, useState } from 'react';
+import SearchResult from './SearchResults/SearchResult';
 
-export default function SearchScreen() {
+// {1: 'name episode 2 reddit', 2: 'name episode 3 reddit', 3: 'name episode 4 reddit'}
+type Queries = Record<number, string>;
+
+interface Props {
+	// queries: Queries;
+	style: CSSProperties;
+}
+
+export default function SearchScreen({ style }: Props) {
 	const SCROLL_AMOUNT = 100;
 	const [yPos, setYPos] = useState(0);
 	const resultsListRef = useRef<HTMLDivElement[]>([]);
@@ -47,7 +55,6 @@ export default function SearchScreen() {
 	}
 
 	function mouseUpHandler() {
-		console.log('mouse up');
 		document.removeEventListener('mousemove', mouseMoveHandler);
 		document.removeEventListener('mouseup', mouseUpHandler);
 	}
@@ -59,6 +66,7 @@ export default function SearchScreen() {
 
 	return (
 		<div
+			style={style}
 			onMouseDown={mouseDownHandler}
 			onWheel={onScrollHandler}
 			className='result-container'>
@@ -91,6 +99,5 @@ function getDistanceFromCenter(el: HTMLElement): number {
 	const centerPoint = parentRect.top + parentRect.height / 2;
 	const elCenterPoint = elRect.top + elRect.height / 2;
 
-	// debugger;
 	return centerPoint - elCenterPoint;
 }

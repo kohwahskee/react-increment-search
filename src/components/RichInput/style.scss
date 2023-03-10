@@ -14,7 +14,7 @@
   transition-property: backdrop-filter, box-shadow;
 
   &.not-typing {
-    backdrop-filter: blur(50px);
+    backdrop-filter: blur(10px);
     box-shadow: 2px 9px 10px 1px rgba(0, 0, 0, 0.1);
   }
 
@@ -68,10 +68,6 @@
   user-select: none;
   z-index: 0;
 
-  // span {
-  //   // white-space: pre-wrap;
-  //   outline: 1px solid white; }
-
   span.selecting {
     pointer-events: auto;
   }
@@ -87,14 +83,14 @@
       width: .7rem;
       height: .7rem;
       border-radius: 100%;
-      background: var(--color-green);
+      background: var(--color-hot-pink);
     }
   }
 
   span[data-isnumber='true'].hovering {
     position: relative;
     border-radius: .3rem;
-    text-shadow: 3px 3px 1px var(--color-green);
+    text-shadow: 3px 3px 1px var(--color-hot-pink);
 
     &::before {
       position: absolute;
@@ -109,5 +105,4 @@
     pointer-events: none;
   }
 
-  // outline: 1px solid blue;
 }
