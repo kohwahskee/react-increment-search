@@ -1,17 +1,18 @@
 import './style.scss';
-import { useSpringValue } from '@react-spring/web';
-import { CSSProperties, WheelEvent, useEffect, useRef, useState } from 'react';
+import { SpringValue, animated, easings, useSpringValue } from '@react-spring/web';
+import { WheelEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import SearchResult from './SearchResults/SearchResult';
 
-// {1: 'name episode 2 reddit', 2: 'name episode 3 reddit', 3: 'name episode 4 reddit'}
-type Queries = Record<number, string>;
+// TODO:
+// 1. Add a scroll boundary
 
+type QueriesMap = Map<number, { title: string; url: string }[]>;
 interface Props {
-	// queries: Queries;
-	style: CSSProperties;
+	transitionAnimation: Record<string, SpringValue<number> | SpringValue<string>>;
+	generatedQueries: QueriesMap;
 }
 
-export default function SearchScreen({ style }: Props) {
+export default function SearchScreen({ transitionAnimation, generatedQueries }: Props) {
 	const SCROLL_AMOUNT = 100;
 	const [yPos, setYPos] = useState(0);
 	const resultsListRef = useRef<HTMLDivElement[]>([]);
@@ -20,14 +21,16 @@ export default function SearchScreen({ style }: Props) {
 	const containerRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
-		resultsListRef.current = Array.from(document.querySelectorAll('.search-result'));
 		setActiveResult(resultsListRef.current[0]);
+		return () => {
+			resultsListRef.current = [];
+		};
 	}, []);
 
 	useEffect(() => {
 		scrollYAnimation.start(yPos, {
 			config: {
-				easing: (t) => t,
+				easing: easings.linear,
 			},
 		});
 	}, [scrollYAnimation, yPos]);
@@ -64,9 +67,36 @@ export default function SearchScreen({ style }: Props) {
 		setActiveResult(null);
 	}
 
+	const addResultToList = useCallback((el: HTMLDivElement) => {
+		resultsListRef.current.push(el);
+	}, []);
+	const removeResult = useCallback((el: HTMLDivElement) => {
+		resultsListRef.current.splice(resultsListRef.current.indexOf(el), 1);
+	}, []);
+
+	const generateSearchResults = useMemo(() => {
+		const results = [];
+		for (const [key, value] of generatedQueries) {
+			const index = key;
+			const queries = value;
+			results.push(
+				<SearchResult
+					key={index}
+					index={index}
+					queries={queries}
+					setActiveResult={setActiveResult}
+					onUnmount={removeResult}
+					onMount={addResultToList}
+					yPos={yPos}
+				/>
+			);
+		}
+		return results;
+	}, [generatedQueries, addResultToList, removeResult, yPos]);
+
 	return (
-		<div
-			style={style}
+		<animated.div
+			style={transitionAnimation}
 			onMouseDown={mouseDownHandler}
 			onWheel={onScrollHandler}
 			className='result-container'>
@@ -75,18 +105,9 @@ export default function SearchScreen({ style }: Props) {
 			<div
 				ref={containerRef}
 				className='search-results-wrapper'>
-				{[...Array(40)].map((item, i) => {
-					return (
-						<SearchResult
-							index={i}
-							key={i}
-							setActiveResult={setActiveResult}
-							yPos={yPos}
-						/>
-					);
-				})}
+				{generateSearchResults}
 			</div>
-		</div>
+		</animated.div>
 	);
 }
 

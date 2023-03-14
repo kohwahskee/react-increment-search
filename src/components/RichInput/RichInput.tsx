@@ -1,8 +1,8 @@
 import { animated } from '@react-spring/web';
 import { FormEvent, useCallback, useEffect, useRef } from 'react';
+import BubbleIndicator from './BubbleIndicator/BubbleIndicator';
 import useInputAnimation from './useInputAnimation';
 import './style.scss';
-import BubbleIndicator from './BubbleIndicator/BubbleIndicator';
 import { InputState } from '../Utils/TypesExport';
 
 interface SearchQuery {
@@ -15,9 +15,6 @@ interface Props {
 	inputState: [InputState, React.Dispatch<React.SetStateAction<InputState>>];
 	setSearchQuery: React.Dispatch<React.SetStateAction<SearchQuery>>;
 }
-
-// TODO: Limit characters to ~25 when input is in FINISHED state
-// FIXME: When there's blank space at the very first of input, number span will include the blank space causing position calculation to be off
 
 export default function RichInput({
 	inputValue: [inputValue, setInputValue],
@@ -115,7 +112,6 @@ export default function RichInput({
 
 		function inputFinishedHandler() {
 			const searchQuery = parseSearchQuery(selectedSpanRef.current, inputValueSpans.current);
-			setSearchQuery(searchQuery);
 			const STRING_LENGTH_LIMIT = 25;
 			const shortenedString = shortenQuery(searchQuery, STRING_LENGTH_LIMIT);
 
@@ -148,9 +144,9 @@ export default function RichInput({
 
 	// Keyboard shortcuts
 	useEffect(() => {
-		document.addEventListener('keypress', keypressHandler);
+		document.addEventListener('keydown', keyDownHandler);
 
-		function keypressHandler(e: KeyboardEvent) {
+		function keyDownHandler(e: KeyboardEvent) {
 			switch (e.key) {
 				case '/': {
 					e.preventDefault();
@@ -159,7 +155,10 @@ export default function RichInput({
 				}
 				case 'Enter': {
 					if (inputState === 'SELECTING' && inputValue !== '') {
-						setInputState('FINISHED');
+						setInputState(() => {
+							setSearchQuery(parseSearchQuery(selectedSpanRef.current, inputValueSpans.current));
+							return 'FINISHED';
+						});
 					}
 					break;
 				}
@@ -168,9 +167,9 @@ export default function RichInput({
 			}
 		}
 		return () => {
-			document.removeEventListener('keypress', keypressHandler);
+			document.removeEventListener('keydown', keyDownHandler);
 		};
-	}, [inputState, inputValue, setInputState]);
+	}, [inputState, inputValue, setInputState, setSearchQuery]);
 
 	return (
 		<animated.div

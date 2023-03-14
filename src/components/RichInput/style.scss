@@ -7,20 +7,17 @@
   left: 50%;
   transform-origin: top right;
   transform: translate(-50%, -50%) scale(1);
-  // outline: 1px solid white;
   font-family: 'AnonymousPro';
   border-radius: .5rem;
-  transition: all 200ms ease-out;
-  transition-property: backdrop-filter, box-shadow;
 
   &.not-typing {
+    user-select: none;
     backdrop-filter: blur(10px);
     box-shadow: 2px 9px 10px 1px rgba(0, 0, 0, 0.1);
   }
 
   &.result-screen {
     box-shadow: 2px 9px 10px 1px rgba(0, 0, 0, 0.2);
-
   }
 }
 

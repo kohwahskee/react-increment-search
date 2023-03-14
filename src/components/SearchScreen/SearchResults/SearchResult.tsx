@@ -3,12 +3,21 @@ import { useEffect, useRef } from 'react';
 import './style.scss';
 
 interface Props {
+	queries: { title: string; url: string }[];
 	index: number;
 	setActiveResult: React.Dispatch<React.SetStateAction<HTMLElement | null>>;
 	yPos: number;
+	onMount: (el: HTMLDivElement) => void;
+	onUnmount: (el: HTMLDivElement) => void;
 }
-
-export default function SearchResult({ index, setActiveResult, yPos }: Props) {
+export default function SearchResult({
+	index,
+	setActiveResult,
+	yPos,
+	queries,
+	onMount: addResultToList,
+	onUnmount: removeResult,
+}: Props) {
 	const searchResultRef = useRef<HTMLDivElement>(null);
 	const parentRectRef = useRef<DOMRect>();
 	const initialRef = useRef<DOMRect>();
@@ -20,7 +29,13 @@ export default function SearchResult({ index, setActiveResult, yPos }: Props) {
 		parentRectRef.current =
 			searchResultRef.current.parentElement?.parentElement?.getBoundingClientRect();
 		initialRef.current = elRect;
-	}, []);
+		const currentNode = searchResultRef.current;
+		addResultToList(searchResultRef.current);
+		// console.count('result mounted');
+		return () => {
+			removeResult(currentNode);
+		};
+	}, [addResultToList, removeResult]);
 
 	useEffect(() => {
 		if (!searchResultRef.current || !parentRectRef.current) return;
@@ -54,6 +69,7 @@ export default function SearchResult({ index, setActiveResult, yPos }: Props) {
 
 	return (
 		<animated.div
+			ref={searchResultRef}
 			className='search-result'
 			style={{
 				transform: scrollYAnimation.to((value) => `translate3d(0,${value}px,0)`),
@@ -76,16 +92,24 @@ export default function SearchResult({ index, setActiveResult, yPos }: Props) {
 					return Math.max(0, Math.min(1, 1 - Math.pow(0.003 * distanceFromCenter, 1.7)));
 				}),
 			}}
-			ref={searchResultRef}
 			onClick={() => setActiveResult(searchResultRef.current)}>
 			<div className='search-result-content'>
 				<h1 className='search-index-number'>{index}</h1>
-				<a>Lorem ipsum dolor sit amet consectetur adipisicing.</a>
-				<a>Lorem ipsum dolor sit amet consectetur adipisicing elit.</a>
+				{queries.map((query, i) => (
+					<a
+						target={'_blank'}
+						rel={'noreferrer'}
+						key={`${query.url}+${query.title}+${index} + ${i}`}
+						href={query.url}>
+						{query.title}
+					</a>
+				))}
 			</div>
 		</animated.div>
 	);
 }
+
+// export default forwardRef(SearchResult);
 
 function getDistanceFromCenter(el: HTMLElement, parentRect: DOMRect) {
 	const elRect = el.getBoundingClientRect();

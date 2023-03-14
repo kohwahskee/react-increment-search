@@ -1,6 +1,7 @@
 .search-result {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   width: 40vw;
   max-width: 40rem;
   height: fit-content;
@@ -10,13 +11,14 @@
   backface-visibility: hidden;
   -moz-backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  will-change: transform3d, scale, opacity;
+  will-change: transform3d, scale, opacity, transform;
 
   .search-result-content {
     position: relative;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    align-items: center;
     gap: 1rem;
     width: 100%;
     min-height: 7rem;
@@ -28,9 +30,11 @@
     transition: background-color 200ms ease-out;
 
     a {
+      width: fit-content;
+      max-width: 100%;
       text-decoration: underline;
       cursor: pointer;
-      text-overflow: ellipsis;
+      // text-overflow: clip;
       white-space: nowrap;
       overflow: hidden;
     }
