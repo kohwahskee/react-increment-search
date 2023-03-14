@@ -1,0 +1,106 @@
+.option-screen {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-dark-blue);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  &::before {
+    position: absolute;
+    content: '';
+    width: 100%;
+    height: 100%;
+    background: var(--color-dark-blue);
+    transform: translateY(-100%);
+  }
+
+  .option-container {
+    width: fit-content;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+
+    .option {
+      display: flex;
+      // outline: 1px solid blue;
+      margin: 2rem;
+      width: fit-content;
+      color: white;
+
+      h3 {
+        // outline: 1px solid red;
+        text-align: right;
+        padding: 0 3rem;
+        font-size: 1.3rem;
+      }
+
+      .option-box {
+        position: relative;
+        width: 10rem;
+        min-height: 5rem;
+        height: fit-content;
+        border-radius: .5rem;
+        background-color: var(--color-purple);
+        text-align: center;
+        font-size: 2rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        padding: 1rem;
+        transition: scale 200ms ease-out;
+
+        &:not(input) {
+          &:hover {
+            scale: 1.1;
+          }
+        }
+      }
+
+      input.option-box {
+        cursor: text;
+      }
+
+      .selectable-options-container {
+        display: flex;
+        align-items: center;
+        position: absolute;
+        height: fit-content;
+        font-family: 'AnonymousPro';
+        width: 15rem;
+        font-size: 1.3rem;
+        color: rgba(255, 255, 255, 0.5);
+        inset: 0;
+        left: 100%;
+        top: 50%;
+        gap: 1rem;
+        flex-direction: column;
+        transform: translate(0, -50%);
+        cursor: auto;
+
+        .option-divider {
+          border-radius: 100%;
+          width: 30%;
+          height: .2rem;
+          background-color: rgba(255, 255, 255, .2);
+        }
+
+        .selectable-option {
+          font-size: 2rem;
+          color: rgba(255, 255, 255, .5);
+          transition: scale 200ms ease-out;
+
+          &:hover {
+            color: white;
+            scale: 1.5;
+            text-shadow: 0 0 1rem white;
+            cursor: pointer;
+          }
+        }
+      }
+    }
+  }
+}
