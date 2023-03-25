@@ -154,7 +154,11 @@ export default function RichInput({
 					break;
 				}
 				case 'Enter': {
-					if (inputState === 'SELECTING' && inputValue !== '') {
+					if (
+						inputState === 'SELECTING' &&
+						inputValue !== '' &&
+						numberInputSpans.current.length > 0
+					) {
 						setInputState(() => {
 							setSearchQuery(parseSearchQuery(selectedSpanRef.current, inputValueSpans.current));
 							return 'FINISHED';

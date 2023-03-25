@@ -1,4 +1,4 @@
-interface BubbleState {
+export interface BubbleState {
 	top: number;
 	left: number;
 	length: number;
@@ -8,7 +8,7 @@ interface BubbleState {
 	spanToAttach: HTMLSpanElement | null;
 }
 
-type ResultResponse = {
+export type ResultResponse = {
 	kind: string;
 	url: {
 		type: string;
@@ -48,6 +48,18 @@ type ResultResponse = {
 	}[];
 };
 
-type InputState = null | 'TYPING' | 'SELECTING' | 'FINISHED';
+export type InputState = null | 'TYPING' | 'SELECTING' | 'FINISHED';
 
-export type { BubbleState, InputState, ResultResponse };
+export interface SearchQuery {
+	firstHalf: string;
+	secondHalf: string;
+	incrementable: number;
+}
+
+export interface Options {
+	numberOfSearches: number;
+	startingNumber: 'selected' | '0' | '1';
+	resultsPerSearch: number;
+}
+
+export type QueriesMap = Map<number, { title: string; url: string }[]>;

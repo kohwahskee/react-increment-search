@@ -1,7 +1,7 @@
-import { useRef, useState, useEffect } from 'react';
-import { InputState } from '../../Utils/TypesExport';
-import { useSpring, animated, easings } from '@react-spring/web';
+import { animated, easings, useSpring } from '@react-spring/web';
+import { useEffect, useRef, useState } from 'react';
 import useUpdateBubbleState from './useUpdateBubbleState';
+import { InputState } from '../../Utils/TypesExport';
 import './style.scss';
 
 interface Props {

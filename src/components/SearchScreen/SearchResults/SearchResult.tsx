@@ -10,6 +10,7 @@ interface Props {
 	onMount: (el: HTMLDivElement) => void;
 	onUnmount: (el: HTMLDivElement) => void;
 }
+
 export default function SearchResult({
 	index,
 	setActiveResult,
@@ -31,7 +32,7 @@ export default function SearchResult({
 		initialRef.current = elRect;
 		const currentNode = searchResultRef.current;
 		addResultToList(searchResultRef.current);
-		// console.count('result mounted');
+
 		return () => {
 			removeResult(currentNode);
 		};
@@ -94,7 +95,7 @@ export default function SearchResult({
 			}}
 			onClick={() => setActiveResult(searchResultRef.current)}>
 			<div className='search-result-content'>
-				<h1 className='search-index-number'>{index}</h1>
+				<h1 className='search-index-number'>{isNaN(index) ? 0 : index}</h1>
 				{queries.map((query, i) => (
 					<a
 						target={'_blank'}

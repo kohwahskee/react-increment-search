@@ -1,26 +1,36 @@
 import './App.scss';
 import './reset.css';
 import { useTransition } from '@react-spring/web';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import OptionScreen from './components/OptionScreen/OptionScreen';
 import RichInput from './components/RichInput/RichInput';
 import SearchScreen from './components/SearchScreen/SearchScreen';
 import ShortcutHelpers from './components/ShortcutHelpers/ShortcutHelpers';
-import { InputState, ResultResponse } from './components/Utils/TypesExport';
+import {
+	InputState,
+	Options,
+	QueriesMap,
+	ResultResponse,
+	SearchQuery,
+} from './components/Utils/TypesExport';
 
-interface SearchQuery {
-	firstHalf: string;
-	secondHalf: string;
-	incrementable: number;
+function getRandomTitle() {
+	const LOADING_PLACEHOLDERS = [
+		'Loading really really hard...',
+		'Searching the web...',
+		'Hacking into CIA servers...',
+		'Performing extremely complex quantum physic computations...',
+		'Filtering out the naughty results...',
+		'Summoning a demon from another world...',
+		'Negotiating with aliens for advanced technology...',
+		'Calculating the meaning of life...',
+		'Rewriting the Matrix for better loading experience...',
+		`Scraping the web for ${Math.floor(Math.random() * 1000000000)} results...`,
+		'Generating loading texts (this is one of them)...',
+		'Putting three dots at the end of this sentence...',
+	];
+	return LOADING_PLACEHOLDERS[Math.floor(Math.random() * LOADING_PLACEHOLDERS.length)];
 }
-
-interface Options {
-	numberOfSearches: number;
-	startingNumber: 'selected' | '0' | '1';
-	resultsPerSearch: number;
-}
-
-type QueriesMap = Map<number, { title: string; url: string }[]>;
 
 function App() {
 	const [inputState, setInputState] = useState<InputState>(null);
@@ -33,6 +43,9 @@ function App() {
 		secondHalf: '',
 		incrementable: NaN,
 	});
+	const lastQuery = useRef<SearchQuery>(searchQuery);
+	const lastGeneratedQueries = useRef<QueriesMap>(generatedQueries);
+
 	const [options, setOptions] = useState<Options>({
 		numberOfSearches: 10,
 		startingNumber: 'selected',
@@ -42,10 +55,10 @@ function App() {
 	const placeholderMap = useMemo(() => {
 		const tempMap = new Map();
 		for (let i = 0; i < options.numberOfSearches; i++) {
-			tempMap.set(i, [{ title: 'loading...', url: '' }]);
+			tempMap.set(i, [{ title: getRandomTitle(), url: '' }]);
 		}
 		return tempMap;
-	}, [options.numberOfSearches]);
+	}, [options]);
 
 	const searchScreenTransition = useTransition(inputState === 'FINISHED', {
 		from: { transform: 'translate3d(-50%, 0%, 0)', opacity: 0 },
@@ -53,7 +66,7 @@ function App() {
 		leave: { transform: 'translate3d(-50%, 20%, 0)', opacity: 0 },
 	});
 
-	const optionScreenTransition = useTransition(optionShown, {
+	const optionScreenTransition = useTransition(optionShown && inputState !== 'FINISHED', {
 		from: { translateY: '-100%' },
 		enter: { translateY: '0%' },
 		leave: { translateY: '-100%' },
@@ -83,46 +96,57 @@ function App() {
 
 	useEffect(() => {
 		if (inputState === 'FINISHED') {
-			// setGeneratedQueries(new Map().set(1, [{ title: 'sdf', url: 'sfd' }]));
+			if (
+				searchQuery.firstHalf === lastQuery.current.firstHalf &&
+				searchQuery.secondHalf === lastQuery.current.secondHalf &&
+				searchQuery.incrementable === lastQuery.current.incrementable
+			) {
+				setGeneratedQueries(lastGeneratedQueries.current);
+				return;
+			}
+
+			lastQuery.current = searchQuery;
+			console.log('new query');
 			setOptionShown(false);
-			const queries: QueriesMap = new Map();
-			const fetchPromises = [];
-			const { numberOfSearches, resultsPerSearch } = options;
 			const startingNumber =
 				options.startingNumber === 'selected'
 					? searchQuery.incrementable
 					: options.startingNumber === '0'
 					? 0
 					: 1;
-
-			for (let i = startingNumber; i < numberOfSearches + startingNumber; i++) {
-				fetchPromises.push(fetch('https://run.mocky.io/v3/3f2eb76c-6b19-434e-ac11-79ed41b139d6'));
-				for (let j = 0; j < resultsPerSearch; j++) {
-					// searchesPerQuery.push({ title: query, url: 'https://www.reddit.com/r/...' });
-				}
-				// queries.set(i, searchesPerQuery);
+			const queries: QueriesMap = new Map();
+			const promiseMap: Map<number, Promise<ResultResponse>> = new Map();
+			const { numberOfSearches, resultsPerSearch } = options;
+			for (let i = 0; i < numberOfSearches; i++) {
+				promiseMap.set(
+					i + startingNumber,
+					fetch('https://run.mocky.io/v3/3f2eb76c-6b19-434e-ac11-79ed41b139d6').then((resp) =>
+						resp.json()
+					)
+				);
 			}
-			// TODO:
-			// 1. Make sure that the queries index are correct
-			// 2. Make sure to only fetch when queries change
 
-			console.log(fetchPromises.length);
-			Promise.all(fetchPromises).then(async (res) => {
-				res.forEach((promise, i) => {
-					promise.json().then((json: ResultResponse) => {
-						const [{ title, link }] = json.items;
-						const shortenedTitle = title.length > 40 ? title.slice(0, 40) + '...' : title;
-						queries.set(i, [{ title: shortenedTitle, url: link }]);
-						setGeneratedQueries(queries);
-					});
+			const promiseArray = Array.from(promiseMap.values());
+			const indexArray = Array.from(promiseMap.keys());
+			Promise.all(promiseArray).then((resp) => {
+				resp.forEach((res, i) => {
+					const items = [];
+					for (let j = 0; j < resultsPerSearch; j++) {
+						const { title, link } = res.items[j];
+						const shortenedTitle = title.length > 50 ? title.slice(0, 50) + '...' : title;
+						items.push({ title: shortenedTitle, url: link });
+					}
+					queries.set(indexArray[i], items);
 				});
+				lastGeneratedQueries.current = queries;
+				setGeneratedQueries(queries);
 			});
 		}
 	}, [inputState, options, placeholderMap, searchQuery]);
 
 	useEffect(() => {
-		setGeneratedQueries(placeholderMap);
-	}, [options.numberOfSearches, placeholderMap]);
+		if (inputState === 'TYPING') setGeneratedQueries(placeholderMap);
+	}, [placeholderMap, options, inputState]);
 
 	return (
 		<div className='App'>

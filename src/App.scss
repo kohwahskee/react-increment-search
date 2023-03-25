@@ -24,7 +24,7 @@
     inset: 0;
     border-radius: 100%;
     aspect-ratio: 1/1;
-    transition: all 1500ms cubic-bezier(.03, .76, .41, 1.02);
+    transition: all 1500ms cubic-bezier(.04, .66, .14, .99);
     transition-property: top, left, width;
   }
 
@@ -36,7 +36,7 @@
     filter: blur(1px);
     box-shadow: 0 0 1.2rem 0.2rem var(--color-hot-pink),
       inset 0rem -0.4rem 1.3rem 0.2rem white;
-    transition-delay: 100ms;
+    transition-delay: 0ms;
 
     &.finished {
       top: -10%;
@@ -53,7 +53,7 @@
     background-color: var(--color-pink-orange);
     box-shadow: 0 0 2rem .2rem var(--color-pink-orange),
       inset 0rem 0rem 3rem .5rem white;
-    transition-delay: 200ms;
+    transition-delay: 100ms;
 
     &.finished {
       top: 70%;
@@ -70,11 +70,11 @@
     filter: blur(1px);
     box-shadow: 1px 1px 1.2rem 0.1rem var(--color-purple),
       inset 0rem 0.4rem 0.4rem 0rem white;
-    transition-duration: 1500ms;
+    transition-delay: 50ms;
 
     &.finished {
-      top: 5%;
-      left: 30%;
+      top: 40%;
+      left: 10%;
     }
   }
 }
