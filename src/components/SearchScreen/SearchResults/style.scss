@@ -8,10 +8,10 @@
   font-family: 'AnonymousPro', sans-serif;
   color: white;
   margin-bottom: 1.5rem;
-  backface-visibility: hidden;
-  -moz-backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  will-change: transform3d, scale, opacity, transform;
+  // backface-visibility: hidden;
+  // -moz-backface-visibility: hidden;
+  // -webkit-backface-visibility: hidden;
+  // will-change: transform3d, scale, opacity, transform;
 
   .search-result-content {
     position: relative;
@@ -28,6 +28,7 @@
     background-color: rgba(0, 0, 0, 0.5);
     border-radius: .5rem;
     transition: background-color 200ms ease-out;
+    user-select: none;
 
     a {
       width: fit-content;
