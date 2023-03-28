@@ -105,6 +105,11 @@ function App() {
   }, [optionShown]);
 
   useEffect(() => {
+    lastQuery.current = { firstHalf: '', secondHalf: '', incrementable: NaN };
+    setGeneratedQueries(placeholderMap);
+  }, [options, placeholderMap]);
+
+  useEffect(() => {
     if (inputState === 'FINISHED') {
       if (
         searchQuery.firstHalf === lastQuery.current.firstHalf &&
@@ -117,6 +122,7 @@ function App() {
 
       lastQuery.current = searchQuery;
       setOptionShown(false);
+
       const startingNumber =
         options.startingNumber === 'selected'
           ? searchQuery.incrementable
@@ -124,8 +130,9 @@ function App() {
           ? 0
           : 1;
       const queries: QueriesMap = new Map();
-      const promiseMap: Map<number, Promise<ResultResponse>> = new Map();
       const { numberOfSearches, resultsPerSearch } = options;
+
+      const promiseMap: Map<number, Promise<ResultResponse>> = new Map();
       for (let i = 0; i < numberOfSearches; i++) {
         promiseMap.set(
           i + startingNumber,
@@ -137,6 +144,7 @@ function App() {
 
       const promiseArray = Array.from(promiseMap.values());
       const indexArray = Array.from(promiseMap.keys());
+
       try {
         Promise.all(promiseArray).then((resp) => {
           resp.forEach((res, i) => {
