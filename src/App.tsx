@@ -12,6 +12,7 @@ import {
   QueriesMap,
   ResultResponse,
   SearchQuery,
+  StorageQuery,
 } from './components/Utils/TypesExport';
 
 function getRandomTitle() {
@@ -32,6 +33,48 @@ function getRandomTitle() {
   return LOADING_PLACEHOLDERS[
     Math.floor(Math.random() * LOADING_PLACEHOLDERS.length)
   ];
+}
+
+async function getQueriesMap(options: Options, searchQuery: SearchQuery) {
+  const startingNumber =
+    options.startingNumber === 'selected'
+      ? searchQuery.incrementable
+      : options.startingNumber === '0'
+      ? 0
+      : 1;
+  const { numberOfSearches, resultsPerSearch } = options;
+
+  const promiseMap: Map<number, Promise<ResultResponse>> = new Map();
+  for (let i = 0; i < numberOfSearches; i++) {
+    const searchIndex = i + startingNumber;
+    promiseMap.set(
+      searchIndex,
+      fetch(`http://localhost:3000/${searchIndex}`).then(
+        (resp) => resp.json() as Promise<ResultResponse>
+      )
+    );
+  }
+
+  const queries: QueriesMap = new Map();
+  const promiseArray = Array.from(promiseMap.values());
+  const indexArray = Array.from(promiseMap.keys());
+
+  try {
+    const results = await Promise.all(promiseArray);
+    results.forEach((res, i) => {
+      const items = [];
+      for (let j = 0; j < resultsPerSearch; j++) {
+        const { title, link } = res.items[j];
+        const shortenedTitle =
+          title.length > 50 ? `${title.slice(0, 50)}...` : title;
+        items.push({ title: shortenedTitle, url: link });
+      }
+      queries.set(indexArray[i], items);
+    });
+    return queries;
+  } catch (error) {
+    throw new Error(error as string);
+  }
 }
 
 function App() {
@@ -89,6 +132,35 @@ function App() {
     }
   );
 
+  // Retrieve last query from local storage
+  useEffect(() => {
+    const queryFromStorage = localStorage.getItem('lastQuery');
+    if (queryFromStorage) {
+      const parsedQuery = JSON.parse(queryFromStorage) as StorageQuery;
+
+      setInputValue(
+        `${parsedQuery.searchQuery.firstHalf}${parsedQuery.searchQuery.incrementable}${parsedQuery.searchQuery.secondHalf}`
+      );
+      setSearchQuery(parsedQuery.searchQuery);
+      setInputState('SELECTING');
+    }
+  }, []);
+
+  // Save last query to local storage
+  useEffect(() => {
+    if (
+      searchQuery.firstHalf === '' &&
+      searchQuery.secondHalf === '' &&
+      Number.isNaN(searchQuery.incrementable)
+    )
+      return;
+    const savedQuery: StorageQuery = {
+      searchQuery,
+    };
+    localStorage.setItem('lastQuery', JSON.stringify(savedQuery));
+  }, [searchQuery]);
+
+  // Update generated queries when options change
   useEffect(() => {
     if (optionShown) {
       document.addEventListener('keydown', keyDownHandler);
@@ -99,71 +171,41 @@ function App() {
         setOptionShown(false);
       }
     }
+
     return () => {
       document.removeEventListener('keydown', keyDownHandler);
     };
   }, [optionShown]);
 
+  // Update placeholder map when options change
   useEffect(() => {
     lastQuery.current = { firstHalf: '', secondHalf: '', incrementable: NaN };
     setGeneratedQueries(placeholderMap);
   }, [options, placeholderMap]);
 
+  // Update generated queries when input value changes
   useEffect(() => {
-    if (inputState === 'FINISHED') {
-      if (
-        searchQuery.firstHalf === lastQuery.current.firstHalf &&
-        searchQuery.secondHalf === lastQuery.current.secondHalf &&
-        searchQuery.incrementable === lastQuery.current.incrementable
-      ) {
-        setGeneratedQueries(lastGeneratedQueries.current);
-        return;
-      }
+    async function fetchQueries() {
+      if (inputState === 'FINISHED') {
+        if (
+          searchQuery.firstHalf === lastQuery.current.firstHalf &&
+          searchQuery.secondHalf === lastQuery.current.secondHalf &&
+          searchQuery.incrementable === lastQuery.current.incrementable
+        ) {
+          setGeneratedQueries(lastGeneratedQueries.current);
+          return;
+        }
 
-      lastQuery.current = searchQuery;
-      setOptionShown(false);
+        lastQuery.current = searchQuery;
+        setOptionShown(false);
 
-      const startingNumber =
-        options.startingNumber === 'selected'
-          ? searchQuery.incrementable
-          : options.startingNumber === '0'
-          ? 0
-          : 1;
-      const queries: QueriesMap = new Map();
-      const { numberOfSearches, resultsPerSearch } = options;
-
-      const promiseMap: Map<number, Promise<ResultResponse>> = new Map();
-      for (let i = 0; i < numberOfSearches; i++) {
-        promiseMap.set(
-          i + startingNumber,
-          fetch(
-            'https://run.mocky.io/v3/3f2eb76c-6b19-434e-ac11-79ed41b139d6'
-          ).then((resp) => resp.json() as Promise<ResultResponse>)
-        );
-      }
-
-      const promiseArray = Array.from(promiseMap.values());
-      const indexArray = Array.from(promiseMap.keys());
-
-      try {
-        Promise.all(promiseArray).then((resp) => {
-          resp.forEach((res, i) => {
-            const items = [];
-            for (let j = 0; j < resultsPerSearch; j++) {
-              const { title, link } = res.items[j];
-              const shortenedTitle =
-                title.length > 50 ? `${title.slice(0, 50)}...` : title;
-              items.push({ title: shortenedTitle, url: link });
-            }
-            queries.set(indexArray[i], items);
-          });
-          lastGeneratedQueries.current = queries;
-          setGeneratedQueries(queries);
-        });
-      } catch (error) {
-        throw new Error(error as string);
+        const queries = await getQueriesMap(options, searchQuery);
+        lastGeneratedQueries.current = queries;
+        setGeneratedQueries(queries);
       }
     }
+
+    fetchQueries();
   }, [inputState, options, placeholderMap, searchQuery]);
 
   useEffect(() => {
