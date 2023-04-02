@@ -2,6 +2,7 @@ import './style.scss';
 import { SpringValue, animated } from '@react-spring/web';
 import { WheelEvent, useCallback, useEffect, useRef, useState } from 'react';
 import SearchResult from './SearchResults/SearchResult';
+import { QueriesObject } from '../Utils/TypesExport';
 
 // TODO:
 // 1. Add a scroll boundary

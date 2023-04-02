@@ -48,6 +48,10 @@ export type ResultResponse = {
   }[];
 };
 
+export type QueriesObject = {
+  [key: string | number]: { title: string; url: string }[];
+};
+
 export type InputState = null | 'TYPING' | 'SELECTING' | 'FINISHED';
 
 export interface SearchQuery {

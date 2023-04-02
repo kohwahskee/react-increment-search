@@ -10,6 +10,7 @@ import {
   InputState,
   Options,
   QueriesMap,
+  QueriesObject,
   ResultResponse,
   SearchQuery,
   StorageQuery,
@@ -120,6 +121,13 @@ function useOptionToggle(isShown: boolean) {
   }, [optionShown]);
   return [optionShown, setOptionShown] as const;
 }
+function isQueryEmpty(query: SearchQuery) {
+  return (
+    query.firstHalf === '' &&
+    query.secondHalf === '' &&
+    Number.isNaN(query.incrementable)
+  );
+}
 function App() {
   const [inputState, setInputState] = useState<InputState>(null);
   const [inputValue, setInputValue] = useState('');
@@ -184,19 +192,37 @@ function App() {
       setInputValue(
         `${parsedQuery.searchQuery.firstHalf}${parsedQuery.searchQuery.incrementable}${parsedQuery.searchQuery.secondHalf}`
       );
-      setSearchQuery(parsedQuery.searchQuery);
+      // setSearchQuery(parsedQuery.searchQuery);
       setInputState('FINISHED');
     }
   }, []);
 
+  // Get generated queries from storage
+
+  useEffect(() => {
+    if (!localStorage.getItem('generatedQueries')) return;
+    const queryFromStorage = localStorage.getItem('generatedQueries');
+    const queries: QueriesMap = new Map();
+    const parsedQueries: QueriesObject = JSON.parse(
+      queryFromStorage || ''
+    ) as QueriesObject;
+    Object.entries(parsedQueries).forEach(([key, value]) => {
+      queries.set(+key, value);
+    });
+    setGeneratedQueries(queries);
+  }, []);
+
+  useEffect(() => {
+    console.log(generatedQueries);
+    if (generatedQueries.size === 0) return;
+    const stringifiedQueries = JSON.stringify(
+      Object.fromEntries(generatedQueries)
+    );
+    localStorage.setItem('generatedQueries', stringifiedQueries);
+  }, [generatedQueries]);
   // Save last query to local storage
   useEffect(() => {
-    if (
-      searchQuery.firstHalf === '' &&
-      searchQuery.secondHalf === '' &&
-      Number.isNaN(searchQuery.incrementable)
-    )
-      return;
+    if (isQueryEmpty(searchQuery)) return;
     const savedQuery: StorageQuery = {
       searchQuery,
     };
@@ -205,9 +231,16 @@ function App() {
 
   // Update placeholder map when options change
   useEffect(() => {
+    if (isQueryEmpty(searchQuery)) return;
     lastQuery.current = { firstHalf: '', secondHalf: '', incrementable: NaN };
     setGeneratedQueries(placeholderMap);
-  }, [options.numberOfSearches, options.startingNumber, placeholderMap]);
+    console.log('option effect');
+  }, [
+    options.numberOfSearches,
+    options.startingNumber,
+    placeholderMap,
+    searchQuery,
+  ]);
 
   // Update generated queries when input value changes
   useEffect(() => {
@@ -222,19 +255,30 @@ function App() {
         searchQuery.secondHalf === lastQuery.current.secondHalf &&
         searchQuery.incrementable === lastQuery.current.incrementable
       ) {
-        setGeneratedQueries(lastGeneratedQueries.current);
+        // setGeneratedQueries(lastGeneratedQueries.current);
         return;
       }
 
       lastQuery.current = searchQuery;
       setOptionShown(false);
-      fetchQueries();
+      if (isQueryEmpty(searchQuery)) return;
+      console.log(searchQuery);
+      console.log(lastQuery.current);
+      if (
+        searchQuery.firstHalf === lastQuery.current.firstHalf &&
+        searchQuery.secondHalf === lastQuery.current.secondHalf &&
+        searchQuery.incrementable === lastQuery.current.incrementable
+      ) {
+        fetchQueries();
+      }
     }
   }, [inputState, options, placeholderMap, searchQuery, setOptionShown]);
 
   useEffect(() => {
+    if (isQueryEmpty(searchQuery)) return;
     if (inputState === 'TYPING') setGeneratedQueries(placeholderMap);
-  }, [placeholderMap, options, inputState]);
+    console.log('search query effect');
+  }, [placeholderMap, options, inputState, searchQuery]);
 
   return (
     <div className="App">
