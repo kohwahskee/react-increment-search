@@ -15,6 +15,9 @@ import {
   StorageQuery,
 } from './components/Utils/TypesExport';
 
+const ENGINE_KEY = '27778fadd392d4a8e';
+const API_KEY = 'AIzaSyDdiLqgc6mda7xAthDgXzcrf9rN3oe-RwY';
+
 function getRandomTitle() {
   const LOADING_PLACEHOLDERS = [
     'Loading really really hard...',
@@ -47,40 +50,80 @@ async function getQueriesMap(options: Options, searchQuery: SearchQuery) {
   const promiseMap: Map<number, Promise<ResultResponse>> = new Map();
   for (let i = 0; i < numberOfSearches; i++) {
     const searchIndex = i + startingNumber;
+    const searchQ = `${searchQuery.firstHalf} ${searchIndex} ${searchQuery.secondHalf}`;
+    const num = 4;
+    const searchParams = `key=${API_KEY}&cx=${ENGINE_KEY}&q=${searchQ}&num=${num}`;
+    // const searchURL = `https://www.googleapis.com/customsearch/v1?${searchParams}`;
+
+    const searchURL = `http://localhost:3000/${searchIndex}`;
     promiseMap.set(
       searchIndex,
-      fetch(`http://localhost:3000/${searchIndex}`).then(
-        (resp) => resp.json() as Promise<ResultResponse>
-      )
+      fetch(searchURL)
+        .then((resp) => {
+          if (!resp.ok) {
+            const items = {
+              link: '',
+              title: 'Failed to fetch results',
+            };
+            const errorResponse: ResultResponse = {
+              items: [items, items, items, items],
+            };
+            return errorResponse;
+          }
+          return resp.json() as Promise<ResultResponse>;
+        })
+        .catch((err) => {
+          throw new Error(err as string);
+        })
     );
   }
 
   const queries: QueriesMap = new Map();
-  const promiseArray = Array.from(promiseMap.values());
+  const resultPromises = Array.from(promiseMap.values());
   const indexArray = Array.from(promiseMap.keys());
 
   try {
-    const results = await Promise.all(promiseArray);
+    const results = await Promise.all(resultPromises);
     results.forEach((res, i) => {
       const items = [];
       for (let j = 0; j < resultsPerSearch; j++) {
         const { title, link } = res.items[j];
-        const shortenedTitle =
-          title.length > 50 ? `${title.slice(0, 50)}...` : title;
-        items.push({ title: shortenedTitle, url: link });
+        items.push({ title, url: link });
       }
       queries.set(indexArray[i], items);
     });
     return queries;
   } catch (error) {
-    throw new Error(error as string);
+    // FIXME: Lots of error when fetch fails (empty list, state not switchintg to FINISHED)
+    throw new Error('Failed to parse results.');
   }
 }
 
+function useOptionToggle(isShown: boolean) {
+  const [optionShown, setOptionShown] = useState(isShown);
+
+  // Update generated queries when options change
+  useEffect(() => {
+    if (optionShown) {
+      document.addEventListener('keydown', keyDownHandler);
+    }
+
+    function keyDownHandler(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setOptionShown(false);
+      }
+    }
+
+    return () => {
+      document.removeEventListener('keydown', keyDownHandler);
+    };
+  }, [optionShown]);
+  return [optionShown, setOptionShown] as const;
+}
 function App() {
   const [inputState, setInputState] = useState<InputState>(null);
   const [inputValue, setInputValue] = useState('');
-  const [optionShown, setOptionShown] = useState(false);
+  const [optionShown, setOptionShown] = useOptionToggle(false);
   const [generatedQueries, setGeneratedQueries] = useState<QueriesMap>(
     new Map()
   );
@@ -142,7 +185,7 @@ function App() {
         `${parsedQuery.searchQuery.firstHalf}${parsedQuery.searchQuery.incrementable}${parsedQuery.searchQuery.secondHalf}`
       );
       setSearchQuery(parsedQuery.searchQuery);
-      setInputState('SELECTING');
+      setInputState('FINISHED');
     }
   }, []);
 
@@ -160,53 +203,34 @@ function App() {
     localStorage.setItem('lastQuery', JSON.stringify(savedQuery));
   }, [searchQuery]);
 
-  // Update generated queries when options change
-  useEffect(() => {
-    if (optionShown) {
-      document.addEventListener('keydown', keyDownHandler);
-    }
-
-    function keyDownHandler(e: KeyboardEvent) {
-      if (e.key === 'Escape') {
-        setOptionShown(false);
-      }
-    }
-
-    return () => {
-      document.removeEventListener('keydown', keyDownHandler);
-    };
-  }, [optionShown]);
-
   // Update placeholder map when options change
   useEffect(() => {
     lastQuery.current = { firstHalf: '', secondHalf: '', incrementable: NaN };
     setGeneratedQueries(placeholderMap);
-  }, [options, placeholderMap]);
+  }, [options.numberOfSearches, options.startingNumber, placeholderMap]);
 
   // Update generated queries when input value changes
   useEffect(() => {
     async function fetchQueries() {
-      if (inputState === 'FINISHED') {
-        if (
-          searchQuery.firstHalf === lastQuery.current.firstHalf &&
-          searchQuery.secondHalf === lastQuery.current.secondHalf &&
-          searchQuery.incrementable === lastQuery.current.incrementable
-        ) {
-          setGeneratedQueries(lastGeneratedQueries.current);
-          return;
-        }
-
-        lastQuery.current = searchQuery;
-        setOptionShown(false);
-
-        const queries = await getQueriesMap(options, searchQuery);
-        lastGeneratedQueries.current = queries;
-        setGeneratedQueries(queries);
-      }
+      const queries = await getQueriesMap(options, searchQuery);
+      lastGeneratedQueries.current = queries;
+      setGeneratedQueries(queries);
     }
+    if (inputState === 'FINISHED') {
+      if (
+        searchQuery.firstHalf === lastQuery.current.firstHalf &&
+        searchQuery.secondHalf === lastQuery.current.secondHalf &&
+        searchQuery.incrementable === lastQuery.current.incrementable
+      ) {
+        setGeneratedQueries(lastGeneratedQueries.current);
+        return;
+      }
 
-    fetchQueries();
-  }, [inputState, options, placeholderMap, searchQuery]);
+      lastQuery.current = searchQuery;
+      setOptionShown(false);
+      fetchQueries();
+    }
+  }, [inputState, options, placeholderMap, searchQuery, setOptionShown]);
 
   useEffect(() => {
     if (inputState === 'TYPING') setGeneratedQueries(placeholderMap);
@@ -215,11 +239,6 @@ function App() {
   return (
     <div className="App">
       <div className="circle-container">
-        <div
-          className={`pink-circle ${
-            inputState === 'FINISHED' ? 'finished' : ''
-          }`}
-        />
         <div
           className={`purple-circle ${
             inputState === 'FINISHED' ? 'finished' : ''

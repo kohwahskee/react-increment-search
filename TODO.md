@@ -16,9 +16,10 @@ TODO:
 7. Look into transitioning into useContext
       <!-- ❌8. Limit number of searches to min of 2 (no longer necessary) -->
       <!-- ✅9. Placeholder map needs to represent results per search accurately. -->
-   <!-- ❓8. Flickery opacity when dragging -->
+   <!-- ❓8. Flickery opacity when dragging (unsure why) -->
 8. Consider lifting scrollAnimation controller up to SearchScreen
 9. When fetch is ready and working, replace mock API with real Google API
+<!-- 10. Pull results/queries from localStorage -->
 
 FIXME:
 

@@ -123,6 +123,7 @@ export default function RichInput({
       const STRING_LENGTH_LIMIT = 25;
       const shortenedString = shortenQuery(searchQuery, STRING_LENGTH_LIMIT);
 
+      tempInputValue.current = inputValue;
       if (inputValue.length > STRING_LENGTH_LIMIT) {
         setInputValue(shortenedString);
         (inputRef.current as HTMLDivElement).innerText = shortenedString;
@@ -139,7 +140,6 @@ export default function RichInput({
     }
     function inputSelectingHandler() {
       inputRef.current?.blur();
-      tempInputValue.current = inputValue;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inputState, setInputValue, setSearchQuery]);

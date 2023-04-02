@@ -35,7 +35,7 @@
       max-width: 100%;
       text-decoration: underline;
       cursor: pointer;
-      // text-overflow: clip;
+      text-overflow: ellipsis;
       white-space: nowrap;
       overflow: hidden;
     }

@@ -9,12 +9,12 @@ export interface BubbleState {
 }
 
 export type ResultResponse = {
-  kind: string;
-  url: {
+  kind?: string;
+  url?: {
     type: string;
     template: string;
   };
-  queries: {
+  queries?: {
     request: {
       title: string;
       totalResults: string;
@@ -28,19 +28,19 @@ export type ResultResponse = {
     }[];
     nextPage: object[];
   };
-  context: object;
-  searchInformation: object;
+  context?: object;
+  searchInformation?: object;
   items: {
-    kind: string;
+    kind?: string;
     title: string;
-    htmlTitle: string;
+    htmlTitle?: string;
     link: string;
-    displayLink: string;
-    snippet: string;
-    htmlSnippet: string;
-    formattedUrl: string;
-    htmlFormattedUrl: string;
-    pagemap: {
+    displayLink?: string;
+    snippet?: string;
+    htmlSnippet?: string;
+    formattedUrl?: string;
+    htmlFormattedUrl?: string;
+    pagemap?: {
       cse_thumbnail: object[];
       metatags: object[];
       cse_image: object[];
