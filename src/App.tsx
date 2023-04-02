@@ -255,22 +255,14 @@ function App() {
         searchQuery.secondHalf === lastQuery.current.secondHalf &&
         searchQuery.incrementable === lastQuery.current.incrementable
       ) {
-        // setGeneratedQueries(lastGeneratedQueries.current);
+        setGeneratedQueries(lastGeneratedQueries.current);
         return;
       }
 
       lastQuery.current = searchQuery;
       setOptionShown(false);
       if (isQueryEmpty(searchQuery)) return;
-      console.log(searchQuery);
-      console.log(lastQuery.current);
-      if (
-        searchQuery.firstHalf === lastQuery.current.firstHalf &&
-        searchQuery.secondHalf === lastQuery.current.secondHalf &&
-        searchQuery.incrementable === lastQuery.current.incrementable
-      ) {
-        fetchQueries();
-      }
+      fetchQueries();
     }
   }, [inputState, options, placeholderMap, searchQuery, setOptionShown]);
 
