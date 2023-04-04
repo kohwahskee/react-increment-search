@@ -12,17 +12,24 @@ TODO:
 <!-- ✅5. Set a scroll boundary to prevent over-scrolling -->
    <!-- 5a. Scroll back to bound when mouseup -->
 
-6. Abstract useEffects to custom hook(s) or reducer(s)
-7. Look into transitioning into useContext
+<!-- 6. Abstract useEffects to custom hook(s) or reducer(s) -->
+<!-- 7. Look into transitioning into useContext -->
+
       <!-- ❌8. Limit number of searches to min of 2 (no longer necessary) -->
       <!-- ✅9. Placeholder map needs to represent results per search accurately. -->
+
    <!-- ❓8. Flickery opacity when dragging (unsure why) -->
-8. Consider lifting scrollAnimation controller up to SearchScreen
+<!-- 8. Consider lifting scrollAnimation controller up to SearchScreen -->
+
 9. When fetch is ready and working, replace mock API with real Google API
-<!-- 10. Pull results/queries from localStorage -->
+   <!-- 10. Pull results/queries from localStorage -->
+   <!-- 10. Abstract app state to reducer -->
+10. Handle placeholder map inside SearchScreen.tsx (instead of App.tsx);
 
 FIXME:
 
+1. On load, when grabbing data from local storage, input states are not set properly (unset)
+2. When adding multiple spaces at the end of input, deleting them will cause input to add a <br>
 <!-- ✅_10. Placeholder map needs to update right after options change_ -->
 
 <!-- ✅1. Changing options without changing query won't change result items. -->

@@ -42,23 +42,28 @@ export default function bubbleReducer(
       if (action.payload === -1) {
         return { ...state, length: -17 };
       }
+
       return { ...state, length: action.payload };
     case 'setBubbleHeight':
       return { ...state, height: action.payload };
     case 'setBubbleVisibility':
       return { ...state, visible: action.payload };
+
     case 'setIsDragging': {
       const isDragging = action.payload;
       const tempObj = {
         ...state,
         isDragging,
       };
+
       if (isDragging) {
         tempObj.length = -17;
       }
+
       return tempObj;
       // return { ...state, isDragging: action.payload };
     }
+
     case 'setSpanToAttach':
       return { ...state, spanToAttach: action.payload };
     case 'setMultiple':
@@ -119,6 +124,7 @@ function getBubblePosition(
     left: newPos.x,
   };
 }
+
 /**
  * Get bubble state based on the last number span
  * @returns top and left position

@@ -1,7 +1,7 @@
 import './App.scss';
 import './reset.css';
 import { useTransition } from '@react-spring/web';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useReducer, useRef } from 'react';
 import OptionScreen from './components/OptionScreen/OptionScreen';
 import RichInput from './components/RichInput/RichInput';
 import SearchScreen from './components/SearchScreen/SearchScreen';
@@ -48,6 +48,7 @@ async function getQueriesMap(options: Options, searchQuery: SearchQuery) {
   const { numberOfSearches, resultsPerSearch } = options;
 
   const promiseMap: Map<number, Promise<ResultResponse>> = new Map();
+
   for (let i = 0; i < numberOfSearches; i++) {
     const searchIndex = i + startingNumber;
     const searchQ = `${searchQuery.firstHalf} ${searchIndex} ${searchQuery.secondHalf}`;
@@ -55,7 +56,7 @@ async function getQueriesMap(options: Options, searchQuery: SearchQuery) {
     const searchParams = `key=${API_KEY}&cx=${ENGINE_KEY}&q=${searchQ}&num=${num}`;
     // const searchURL = `https://www.googleapis.com/customsearch/v1?${searchParams}`;
 
-    const searchURL = `http://localhost:3000/${searchIndex}`;
+    const searchURL = `http://localhost:3000/${searchQ}&${searchIndex}`;
     promiseMap.set(
       searchIndex,
       fetch(searchURL)
@@ -70,6 +71,7 @@ async function getQueriesMap(options: Options, searchQuery: SearchQuery) {
             };
             return errorResponse;
           }
+
           return resp.json() as Promise<ResultResponse>;
         })
         .catch((err) => {
@@ -86,71 +88,150 @@ async function getQueriesMap(options: Options, searchQuery: SearchQuery) {
     const results = await Promise.all(resultPromises);
     results.forEach((res, i) => {
       const items = [];
+
       for (let j = 0; j < resultsPerSearch; j++) {
         const { title, link } = res.items[j];
         items.push({ title, url: link });
       }
+
       queries.set(indexArray[i], items);
     });
     return queries;
   } catch (error) {
-    // FIXME: Lots of error when fetch fails (empty list, state not switchintg to FINISHED)
     throw new Error('Failed to parse results.');
   }
 }
 
-function useOptionToggle(isShown: boolean) {
-  const [optionShown, setOptionShown] = useState(isShown);
-
+function useOptionShortcut(isShown: boolean, setFn: (value: boolean) => void) {
   // Update generated queries when options change
   useEffect(() => {
-    if (optionShown) {
+    if (isShown) {
       document.addEventListener('keydown', keyDownHandler);
     }
 
     function keyDownHandler(e: KeyboardEvent) {
       if (e.key === 'Escape') {
-        setOptionShown(false);
+        setFn(false);
       }
     }
 
     return () => {
       document.removeEventListener('keydown', keyDownHandler);
     };
-  }, [optionShown]);
-  return [optionShown, setOptionShown] as const;
+  }, [isShown, setFn]);
 }
-function App() {
-  const [inputState, setInputState] = useState<InputState>(null);
-  const [inputValue, setInputValue] = useState('');
-  const [optionShown, setOptionShown] = useOptionToggle(false);
-  const [generatedQueries, setGeneratedQueries] = useState<QueriesMap>(
-    new Map()
-  );
 
-  const [searchQuery, setSearchQuery] = useState<SearchQuery>({
+type AppState = {
+  inputState: InputState;
+  inputValue: string;
+  optionShown: boolean;
+  generatedQueries: QueriesMap;
+  searchQuery: SearchQuery;
+  options: Options;
+};
+
+type AppStateAction =
+  | {
+      type: 'setInputState';
+      payload: { inputState: InputState } & Partial<AppState>;
+    }
+  | {
+      type: 'setInputValue';
+      payload: string;
+    }
+  | {
+      type: 'setOptionShown';
+      payload: boolean;
+    }
+  | {
+      type: 'setGeneratedQueries';
+      payload: QueriesMap;
+    }
+  | {
+      type: 'setSearchQuery';
+      payload: SearchQuery;
+    }
+  | {
+      type: 'setOptions';
+      payload: Partial<Options>;
+    }
+  | {
+      type: 'toggleOptionShown';
+    };
+
+function appStateReducer(state: AppState, action: AppStateAction) {
+  switch (action.type) {
+    case 'setInputState':
+      return {
+        ...state,
+        ...action.payload,
+        inputState: action.payload.inputState,
+      };
+    case 'setInputValue':
+      return { ...state, inputValue: action.payload };
+    case 'setOptionShown':
+      return { ...state, optionShown: action.payload };
+    case 'setGeneratedQueries':
+      return { ...state, generatedQueries: action.payload };
+    case 'setSearchQuery':
+      return { ...state, searchQuery: action.payload };
+    case 'setOptions':
+      return { ...state, options: { ...state.options, ...action.payload } };
+    case 'toggleOptionShown':
+      return { ...state, optionShown: !state.optionShown };
+    default:
+      return state;
+  }
+}
+
+const initialAppState: AppState = {
+  inputState: null,
+  inputValue: '',
+  optionShown: false,
+  generatedQueries: new Map(),
+  searchQuery: {
     firstHalf: '',
     secondHalf: '',
     incrementable: NaN,
-  });
-  const lastQuery = useRef<SearchQuery>(searchQuery);
-  const lastGeneratedQueries = useRef<QueriesMap>(generatedQueries);
-
-  const [options, setOptions] = useState<Options>({
+  },
+  options: {
     numberOfSearches: 10,
     startingNumber: 'selected',
     resultsPerSearch: 2,
-  });
+  },
+};
+
+function App() {
+  const [appState, dispatchAppState] = useReducer(
+    appStateReducer,
+    initialAppState
+  );
+
+  const {
+    inputState,
+    inputValue,
+    optionShown,
+    generatedQueries,
+    searchQuery,
+    options,
+  } = appState;
+
+  const lastQuery = useRef<SearchQuery>(appState.searchQuery);
+  const lastGeneratedQueries = useRef<QueriesMap>(generatedQueries);
 
   const placeholderMap = useMemo(() => {
-    const tempMap = new Map();
+    const tempMap: QueriesMap = new Map();
+
     for (let i = 0; i < options.numberOfSearches; i++) {
       const queries = [];
+
       for (let j = 0; j < options.resultsPerSearch; j++) {
         queries.push({ title: getRandomTitle(), url: '' });
       }
+
       tempMap.set(i, queries);
     }
+
     return tempMap;
   }, [options]);
 
@@ -175,17 +256,24 @@ function App() {
     }
   );
 
+  useOptionShortcut(optionShown, (value) =>
+    dispatchAppState({ type: 'setOptionShown', payload: value })
+  );
   // Retrieve last query from local storage
   useEffect(() => {
     const queryFromStorage = localStorage.getItem('lastQuery');
-    if (queryFromStorage) {
-      const parsedQuery = JSON.parse(queryFromStorage) as StorageQuery;
 
-      setInputValue(
-        `${parsedQuery.searchQuery.firstHalf}${parsedQuery.searchQuery.incrementable}${parsedQuery.searchQuery.secondHalf}`
-      );
-      setSearchQuery(parsedQuery.searchQuery);
-      setInputState('FINISHED');
+    if (queryFromStorage) {
+      const parsedQuery = JSON.parse(queryFromStorage) as SearchQuery;
+      const { firstHalf, secondHalf, incrementable } = parsedQuery;
+      dispatchAppState({
+        type: 'setInputState',
+        payload: {
+          inputState: 'FINISHED',
+          inputValue: `${firstHalf}${incrementable}${secondHalf}`,
+          searchQuery: parsedQuery,
+        },
+      });
     }
   }, []);
 
@@ -197,16 +285,13 @@ function App() {
       Number.isNaN(searchQuery.incrementable)
     )
       return;
-    const savedQuery: StorageQuery = {
-      searchQuery,
-    };
-    localStorage.setItem('lastQuery', JSON.stringify(savedQuery));
+    localStorage.setItem('lastQuery', JSON.stringify(searchQuery));
   }, [searchQuery]);
 
   // Update placeholder map when options change
   useEffect(() => {
     lastQuery.current = { firstHalf: '', secondHalf: '', incrementable: NaN };
-    setGeneratedQueries(placeholderMap);
+    dispatchAppState({ type: 'setGeneratedQueries', payload: placeholderMap });
   }, [options.numberOfSearches, options.startingNumber, placeholderMap]);
 
   // Update generated queries when input value changes
@@ -214,26 +299,34 @@ function App() {
     async function fetchQueries() {
       const queries = await getQueriesMap(options, searchQuery);
       lastGeneratedQueries.current = queries;
-      setGeneratedQueries(queries);
+      dispatchAppState({ type: 'setGeneratedQueries', payload: queries });
     }
+
     if (inputState === 'FINISHED') {
       if (
         searchQuery.firstHalf === lastQuery.current.firstHalf &&
         searchQuery.secondHalf === lastQuery.current.secondHalf &&
         searchQuery.incrementable === lastQuery.current.incrementable
       ) {
-        setGeneratedQueries(lastGeneratedQueries.current);
+        dispatchAppState({
+          type: 'setGeneratedQueries',
+          payload: lastGeneratedQueries.current,
+        });
         return;
       }
 
       lastQuery.current = searchQuery;
-      setOptionShown(false);
+      dispatchAppState({ type: 'setOptionShown', payload: false });
       fetchQueries();
     }
-  }, [inputState, options, placeholderMap, searchQuery, setOptionShown]);
+  }, [inputState, options, placeholderMap, searchQuery]);
 
   useEffect(() => {
-    if (inputState === 'TYPING') setGeneratedQueries(placeholderMap);
+    if (inputState === 'TYPING')
+      dispatchAppState({
+        type: 'setGeneratedQueries',
+        payload: placeholderMap,
+      });
   }, [placeholderMap, options, inputState]);
 
   return (
@@ -252,9 +345,22 @@ function App() {
       </div>
 
       <RichInput
-        inputValue={[inputValue, setInputValue]}
-        inputState={[inputState, setInputState]}
-        setSearchQuery={setSearchQuery}
+        inputValue={[
+          inputValue,
+          (value: string) =>
+            dispatchAppState({ type: 'setInputValue', payload: value }),
+        ]}
+        inputState={[
+          inputState,
+          (state: InputState) =>
+            dispatchAppState({
+              type: 'setInputState',
+              payload: { inputState: state },
+            }),
+        ]}
+        setSearchQuery={(query: SearchQuery) =>
+          dispatchAppState({ type: 'setSearchQuery', payload: query })
+        }
       />
 
       {inputState !== 'FINISHED' && <ShortcutHelpers inputState={inputState} />}
@@ -275,14 +381,20 @@ function App() {
             <OptionScreen
               transitionAnimation={style}
               options={options}
-              setOptions={setOptions}
+              setOptions={(option: Partial<Options>) =>
+                dispatchAppState({ type: 'setOptions', payload: option })
+              }
             />
           )
       )}
 
       {inputState !== 'FINISHED' && (
         <button
-          onClick={() => setOptionShown((prev) => !prev)}
+          onClick={() =>
+            dispatchAppState({
+              type: 'toggleOptionShown',
+            })
+          }
           className={`option-button ${optionShown ? 'option-shown' : ''}`}
         >
           {optionShown ? 'Back' : 'Options'}

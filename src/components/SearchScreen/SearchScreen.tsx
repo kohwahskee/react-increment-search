@@ -43,6 +43,7 @@ export default function SearchScreen({
 
     scrollBoundRef.current = { top: topBound, bottom: bottomBound };
     setActiveResult(resultsListRef.current[0]);
+
     return () => {
       resultsListRef.current = [];
     };
@@ -66,6 +67,7 @@ export default function SearchScreen({
       scrollBoundRef.current.top,
       scrollBoundRef.current.bottom,
     ];
+
     // If scrolling up and goes past top bound -> scroll to top
     if (e.deltaY < 0 && yPos + SCROLL_AMOUNT >= topBound) {
       scrollBy(topBound - yPos);
@@ -97,10 +99,12 @@ export default function SearchScreen({
   }
 
   function scrollToBound() {
+    if (!resultsListRef.current.length || !containerRef.current) return;
+
     const topResult = resultsListRef.current[0];
     const bottomResult =
       resultsListRef.current[resultsListRef.current.length - 1];
-    const centerPoint = getElCenterPoint(containerRef.current as HTMLElement);
+    const centerPoint = getElCenterPoint(containerRef.current);
 
     const topBound = centerPoint - getElCenterPoint(topResult);
     const bottomBound = centerPoint - getElCenterPoint(bottomResult);
@@ -111,6 +115,7 @@ export default function SearchScreen({
       scrollToElement(bottomResult);
     }
   }
+
   function scrollBy(amount: number) {
     setActiveResult(null);
     setYPos((prev) => prev + amount);

@@ -25,3 +25,6 @@ dist-ssr
 
 # Drafting
 *.excalidraw
+
+# TODO
+TODO.md

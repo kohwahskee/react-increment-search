@@ -11,9 +11,9 @@ interface SearchQuery {
   incrementable: number;
 }
 interface Props {
-  inputValue: [string, React.Dispatch<React.SetStateAction<string>>];
-  inputState: [InputState, React.Dispatch<React.SetStateAction<InputState>>];
-  setSearchQuery: React.Dispatch<React.SetStateAction<SearchQuery>>;
+  inputValue: [string, (value: string) => void];
+  inputState: [InputState, (state: InputState) => void];
+  setSearchQuery: (query: SearchQuery) => void;
 }
 
 export default function RichInput({
@@ -25,11 +25,23 @@ export default function RichInput({
   const containerSpring = useInputAnimation(inputState);
 
   const selectedSpanRef = useRef<HTMLSpanElement | null>(null);
+
   const setSelectedSpan = (span: HTMLSpanElement | null) => {
     selectedSpanRef.current = span;
   };
 
-  const tempInputValue = useRef<string | null>(null);
+  const tempInputValue = useRef<string | null>(
+    (() => {
+      const queryFromStorage = localStorage.getItem('lastQuery');
+      if (queryFromStorage === null) return null;
+      const parsedQueryFromStorage = JSON.parse(
+        queryFromStorage
+      ) as SearchQuery;
+      const { firstHalf, secondHalf, incrementable } = parsedQueryFromStorage;
+
+      return `${firstHalf}${incrementable}${secondHalf}`;
+    })()
+  );
   const inputRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const placeHolderRef = useRef<HTMLDivElement>(null);
@@ -42,11 +54,13 @@ export default function RichInput({
   const onInputHandler = useCallback(
     (e: FormEvent) => {
       const text = (e.target as HTMLDivElement).innerText;
+
       if (text === '\n') {
         // contentEditable will add <br> when empty
         setInputValue('');
         return;
       }
+
       setInputValue(text);
     },
     [setInputValue]
@@ -65,6 +79,7 @@ export default function RichInput({
       if (e.key === 'Enter') {
         e.stopPropagation();
         e.preventDefault();
+
         if (inputState === 'TYPING') {
           setInputState('SELECTING');
         }
@@ -86,6 +101,7 @@ export default function RichInput({
         flip = true;
         return;
       }
+
       if (!flip) {
         firstHalf += span.innerText;
       } else {
@@ -123,26 +139,30 @@ export default function RichInput({
       const STRING_LENGTH_LIMIT = 25;
       const shortenedString = shortenQuery(searchQuery, STRING_LENGTH_LIMIT);
 
-      tempInputValue.current = inputValue;
+      // tempInputValue.current = inputValue;
+
       if (inputValue.length > STRING_LENGTH_LIMIT) {
         setInputValue(shortenedString);
         (inputRef.current as HTMLDivElement).innerText = shortenedString;
       }
     }
+
     function inputTypingHandler() {
       inputRef.current?.focus();
+
       if (tempInputValue.current !== null) {
         setInputValue(tempInputValue.current);
         (inputRef.current as HTMLDivElement).innerText = tempInputValue.current;
         tempInputValue.current = null;
       }
+
       putCaretAtEnd(inputRef.current as HTMLDivElement);
     }
+
     function inputSelectingHandler() {
       inputRef.current?.blur();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputState, setInputValue, setSearchQuery]);
+  }, [inputState, inputValue, setInputValue, setSearchQuery]);
 
   //  Set container's height dynamically
   useEffect(() => {
@@ -161,28 +181,28 @@ export default function RichInput({
           setInputState('TYPING');
           break;
         }
+
         case 'Enter': {
           if (
             inputState === 'SELECTING' &&
             inputValue !== '' &&
             numberInputSpans.current.length > 0
           ) {
-            setInputState(() => {
-              setSearchQuery(
-                parseSearchQuery(
-                  selectedSpanRef.current,
-                  inputValueSpans.current
-                )
-              );
-              return 'FINISHED';
-            });
+            tempInputValue.current = inputValue;
+            setInputState('FINISHED');
+            setSearchQuery(
+              parseSearchQuery(selectedSpanRef.current, inputValueSpans.current)
+            );
           }
+
           break;
         }
+
         default:
           break;
       }
     }
+
     return () => {
       document.removeEventListener('keydown', keyDownHandler);
     };
@@ -263,6 +283,7 @@ function putCaretAtEnd(el: HTMLElement) {
 
 function shortenQuery(query: SearchQuery, limit: number) {
   let shortenedString: string;
+
   if (Number.isNaN(query.incrementable)) {
     shortenedString = `${query.firstHalf.slice(0, limit)}...`;
   } else {
@@ -273,6 +294,7 @@ function shortenQuery(query: SearchQuery, limit: number) {
       query.secondHalf.length > limit / 2 ? '...' : ''
     } ${secondHalf}`;
   }
+
   return shortenedString;
 }
 
