@@ -129,6 +129,14 @@ export default function SearchResult({
         </h1>
         {queries.map((query, i) => (
           <a
+            onClick={(e) => {
+              // Prevent links from opening when there is no url
+              // (e.g. when fetch fails and url is empty)
+              if (!query.url) e.preventDefault();
+            }}
+            style={{
+              textDecoration: query.url ? 'underline' : 'none',
+            }}
             target="_blank"
             rel="noreferrer"
             // eslint-disable-next-line react/no-array-index-key
