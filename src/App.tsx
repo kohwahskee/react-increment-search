@@ -1,7 +1,7 @@
 import './App.scss';
 import './reset.css';
 import { useTransition } from '@react-spring/web';
-import { useEffect, useMemo, useReducer, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 import OptionScreen from './components/OptionScreen/OptionScreen';
 import RichInput from './components/RichInput/RichInput';
 import SearchScreen from './components/SearchScreen/SearchScreen';
@@ -12,7 +12,6 @@ import {
   QueriesMap,
   ResultResponse,
   SearchQuery,
-  StorageQuery,
 } from './components/Utils/TypesExport';
 
 const ENGINE_KEY = '27778fadd392d4a8e';
@@ -36,6 +35,17 @@ function getRandomTitle() {
   return LOADING_PLACEHOLDERS[
     Math.floor(Math.random() * LOADING_PLACEHOLDERS.length)
   ];
+}
+
+function getErrorResponse(errMsg: string, link = '') {
+  const items = {
+    link,
+    title: errMsg,
+  };
+  const errorResponse: ResultResponse = {
+    items: [items, items, items, items],
+  };
+  return errorResponse;
 }
 
 async function getQueriesMap(options: Options, searchQuery: SearchQuery) {
@@ -62,20 +72,17 @@ async function getQueriesMap(options: Options, searchQuery: SearchQuery) {
       fetch(searchURL)
         .then((resp) => {
           if (!resp.ok) {
-            const items = {
-              link: '',
-              title: 'Failed to fetch results',
-            };
-            const errorResponse: ResultResponse = {
-              items: [items, items, items, items],
-            };
-            return errorResponse;
+            if (resp.status === 429) {
+              return getErrorResponse('Maximum Daily Requests Exceeded');
+            }
+
+            return getErrorResponse('Failed to fetch results');
           }
 
           return resp.json() as Promise<ResultResponse>;
         })
-        .catch((err) => {
-          throw new Error(err as string);
+        .catch(() => {
+          return getErrorResponse('Failed to fetch results');
         })
     );
   }
@@ -98,7 +105,14 @@ async function getQueriesMap(options: Options, searchQuery: SearchQuery) {
     });
     return queries;
   } catch (error) {
-    throw new Error('Failed to parse results.');
+    const errorResponseMap: QueriesMap = new Map();
+    const errorQueries = [{ title: 'Something went wrong...', url: '' }];
+
+    for (let i = 0; i < numberOfSearches; i++) {
+      errorResponseMap.set(i, errorQueries);
+    }
+
+    return errorResponseMap;
   }
 }
 
@@ -235,6 +249,13 @@ function App() {
     return tempMap;
   }, [options]);
 
+  const setInputValue = useCallback((value: string) => {
+    dispatchAppState({ type: 'setInputValue', payload: value });
+  }, []);
+  const setInputState = useCallback((value: InputState) => {
+    dispatchAppState({ type: 'setInputState', payload: { inputState: value } });
+  }, []);
+
   const searchScreenTransition = useTransition(inputState === 'FINISHED', {
     from: { transform: 'translate3d(-50%, 0%, 0)', opacity: 0 },
     enter: { transform: 'translate3d(-50%, 0%, 0)', opacity: 1 },
@@ -333,6 +354,11 @@ function App() {
     <div className="App">
       <div className="circle-container">
         <div
+          className={`pink-circle ${
+            inputState === 'FINISHED' ? 'finished' : ''
+          }`}
+        />
+        <div
           className={`purple-circle ${
             inputState === 'FINISHED' ? 'finished' : ''
           }`}
@@ -345,19 +371,8 @@ function App() {
       </div>
 
       <RichInput
-        inputValue={[
-          inputValue,
-          (value: string) =>
-            dispatchAppState({ type: 'setInputValue', payload: value }),
-        ]}
-        inputState={[
-          inputState,
-          (state: InputState) =>
-            dispatchAppState({
-              type: 'setInputState',
-              payload: { inputState: state },
-            }),
-        ]}
+        inputValue={[inputValue, setInputValue]}
+        inputState={[inputState, setInputState]}
         setSearchQuery={(query: SearchQuery) =>
           dispatchAppState({ type: 'setSearchQuery', payload: query })
         }

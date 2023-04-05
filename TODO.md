@@ -21,15 +21,18 @@ TODO:
    <!-- ❓8. Flickery opacity when dragging (unsure why) -->
 <!-- 8. Consider lifting scrollAnimation controller up to SearchScreen -->
 
-9. When fetch is ready and working, replace mock API with real Google API
-   <!-- 10. Pull results/queries from localStorage -->
-   <!-- 10. Abstract app state to reducer -->
-10. Handle placeholder map inside SearchScreen.tsx (instead of App.tsx);
+9.  When fetch is ready and working, replace mock API with real Google API
+    <!-- 10. Pull results/queries from localStorage -->
+    <!-- 10. Abstract app state to reducer -->
+10. Store last active result and options in localStorage
+    <!-- ❌11. Handle placeholder map inside SearchScreen.tsx (instead of App.tsx); (X because it's better to handle error right where data is fetched) -->
+    <!-- 12. Custom error message for 429. -->
+        FIXME:
 
-FIXME:
+<!-- 13. On load, when grabbing data from local storage, input states are not set properly (unset) -->
 
-1. On load, when grabbing data from local storage, input states are not set properly (unset)
-2. When adding multiple spaces at the end of input, deleting them will cause input to add a <br>
-<!-- ✅_10. Placeholder map needs to update right after options change_ -->
+14. When adding multiple spaces at the end of input, deleting them will cause input to add a <br>
+    <!-- 15. When switching from SELECTING to FINISHED and query hasn't changed, generatedQueries will be empty. -->
+    <!-- ✅_10. Placeholder map needs to update right after options change_ -->
 
 <!-- ✅1. Changing options without changing query won't change result items. -->

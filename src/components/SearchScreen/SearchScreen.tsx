@@ -3,9 +3,6 @@ import { SpringValue, animated } from '@react-spring/web';
 import { WheelEvent, useCallback, useEffect, useRef, useState } from 'react';
 import SearchResult from './SearchResults/SearchResult';
 
-// TODO:
-// 1. Add a scroll boundary
-
 type QueriesMap = Map<number, { title: string; url: string }[]>;
 interface Props {
   transitionAnimation: Record<

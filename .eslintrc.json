@@ -78,6 +78,7 @@
         "ignoreDeclarationSort": true
       }
     ],
+    "no-param-reassign": ["error", { "props": false }],
     "padding-line-between-statements": [
       "warn",
       { "blankLine": "always", "prev": "*", "next": "block" },
