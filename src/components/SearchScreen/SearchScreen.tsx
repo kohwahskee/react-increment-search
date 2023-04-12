@@ -5,6 +5,7 @@ import SearchResult from './SearchResults/SearchResult';
 
 type QueriesMap = Map<number, { title: string; url: string }[]>;
 interface Props {
+  placeholderMap: QueriesMap;
   transitionAnimation: Record<
     string,
     SpringValue<number> | SpringValue<string>
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export default function SearchScreen({
+  placeholderMap,
   transitionAnimation,
   generatedQueries,
 }: Props) {
@@ -136,18 +138,23 @@ export default function SearchScreen({
         }`}
       />
       <ul ref={containerRef} className="search-results-wrapper">
-        {Array.from(generatedQueries).map(([index, queries], i) => (
-          <SearchResult
-            // eslint-disable-next-line react/no-array-index-key
-            key={i}
-            index={index}
-            queries={queries}
-            setActiveResult={setActiveResult}
-            onUnmount={removeResult}
-            onMount={addResultToList}
-            yPos={yPos}
-          />
-        ))}
+        {(() => {
+          const queriesToUse =
+            generatedQueries.size === 0 ? placeholderMap : generatedQueries;
+
+          return Array.from(queriesToUse).map(([index, queries], i) => (
+            <SearchResult
+              // eslint-disable-next-line react/no-array-index-key
+              key={i}
+              index={index}
+              queries={queries}
+              setActiveResult={setActiveResult}
+              onUnmount={removeResult}
+              onMount={addResultToList}
+              yPos={yPos}
+            />
+          ));
+        })()}
       </ul>
     </animated.div>
   );
