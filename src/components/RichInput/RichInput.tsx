@@ -11,6 +11,7 @@ interface SearchQuery {
   incrementable: number;
 }
 interface Props {
+  initialInputValue: string;
   inputValue: [string, (value: string) => void];
   inputState: [InputState, (state: InputState) => void];
   setSearchQuery: (query: SearchQuery) => void;
@@ -178,6 +179,7 @@ function useInputStateHandler(
 }
 
 export default function RichInput({
+  initialInputValue,
   inputValue: [inputValue, setInputValue],
   inputState: [inputState, setInputState],
   setSearchQuery,
@@ -273,6 +275,7 @@ export default function RichInput({
     setSearchQuery,
     numberInputSpans
   );
+
   return (
     <animated.div
       style={containerSpring}
@@ -329,7 +332,9 @@ export default function RichInput({
           spellCheck={false}
           contentEditable
           suppressContentEditableWarning
-        />
+        >
+          {initialInputValue}
+        </div>
       </div>
       <BubbleIndicator
         setSelectedSpan={setSelectedSpan}
