@@ -1,0 +1,43 @@
+TODO:
+  ✔ When search query changes (or when state changes back to TYPING/SELECTING), reset placeholder map @done(23-04-06 20:40)
+  ✔ If previous query === new query, don't fetch again @done(23-04-06 20:40)
+  ✔ Correctly adding the number of results per search to generated queries @done(23-04-06 20:40)
+  When query has no incrementable, either:
+    - Only show 1 result (both generatedQueries and placeholder) or 
+    ✔ Don't show show any at all (input state doesn't change to FINISHED) @done(23-04-06 20:40)
+  Set a scroll boundary to prevent over-scrolling:
+      ✔ Scroll back to bound when mouseup @done(23-04-06 20:40)
+  ✔ Abstract `useEffects` to custom hook(s) or reducer(s) @done(23-04-06 20:41)
+  ✘ Look into transitioning into `useContext` @cancelled(23-04-06 20:43)
+  ✔ Limit number of searches to min of 2 (no longer necessary) @done(23-04-06 20:41)
+  ✔ Placeholder map needs to represent results per search accurately. @done(23-04-06 20:41)
+  ✘ Flickery opacity when dragging @cancelled(23-04-06 20:44) (unsure why, could be browser issue) 
+  ✘ Consider lifting scrollAnimation controller up to `SearchScreen` @cancelled(23-04-06 20:45)
+  ✔ Pull results/queries from localStorage @done(23-04-06 20:45)
+  ✔ Abstract app state to reducer @done(23-04-06 20:45)
+  ✘ When search query === last query but `generatedQueries` is empty, fetch again @cancelled(23-04-07 01:18)
+  ✘ Handle placeholder map inside `SearchScreen.tsx` (instead of `App.tsx`); @cancelled(23-04-06 20:45) (cancelled because it's better to handle error right where data is fetched) 
+  ✔ Custom error message for 429. @done(23-04-06 20:45)
+  ☐ When fetch is ready and working, replace mock API with real Google API
+  ☐ Abstract `useEffects` in `App.tsx` to custom hooks @started(23-04-07 01:19)
+  ✔ Store last active result and options in `localStorage` @started(23-04-11 21:30) @done(23-04-12 18:57) @lasted(21h27m39s)
+    To do so, store the index of the result instead of the result element itself
+  ☐ Abstract placeholder map into helper function @low
+  ☐ Add `<title>` for result links. 
+
+FIXME:
+  ☐ Since placeholder is now handled in SearchScreen, it won't be ready immediately after `inputState` is switch to `FINISHED`. This causes `scrollBound` to be set incorrectly. @started(23-04-12 21:19)
+  Generated Queries not set properly when retreiving from localStorage:
+     Reason: placeholder map is set immediately on load and when options/inputState changes, causing conflict between placeholder map and generated queries
+    ✔ ? Think of a better way to set placeholder map @done(23-04-12 17:51)
+  ✘ @low Possibly duplicated search params @started(23-04-11 21:51) @cancelled(23-04-11 21:55) @wasted(4m28s) (intended behaviour for mock API)
+  ✔ @high Input is empty when load from localStorage @started(23-04-10 21:58) @done(23-04-11 21:25) @lasted(23h27m25s)
+  ✔ On load, when grabbing data from local storage, input states are not set properly (unset) @done(23-04-06 20:45)
+  ✘ When adding multiple spaces at the end of input, deleting them will cause input to add a <br> @cancelled(23-04-06 21:21) (problem solved itself somehow, probably due to `tempInputValue` being set properly) 
+  ✔ When switching from SELECTING to FINISHED and query hasn't changed, `generatedQueries` will be empty. @done(23-04-06 20:46)
+  ✔ Placeholder map needs to update right after options change @done(23-04-06 20:46)
+  ✔ Changing options without changing query won't change result items. @done(23-04-06 20:46)
+
+
+@critical ** IMPORTANT **:
+When animating, especially with transform animation, round the value to nearest 1 to prevent laggy animation in Firefox

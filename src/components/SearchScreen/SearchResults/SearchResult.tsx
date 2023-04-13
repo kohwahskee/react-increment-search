@@ -8,7 +8,7 @@ interface Props {
     url: string;
   }[];
   index: number;
-  setActiveResult: React.Dispatch<React.SetStateAction<HTMLElement | null>>;
+  setActiveResult: (el: HTMLLIElement | null) => void;
   yPos: number;
   onMount: (el: HTMLLIElement) => void;
   onUnmount: (el: HTMLLIElement) => void;

@@ -22,7 +22,7 @@ export default function SearchScreen({
 
   const [yPos, setYPos] = useState(0);
   const [activeResult, setActiveResult] = useState<HTMLElement | null>(null);
-  const resultsListRef = useRef<HTMLLIElement[]>([]);
+  const resultsListRef = useRef<HTMLElement[]>([]);
   const containerRef = useRef<HTMLUListElement>(null);
   const scrollBoundRef = useRef({ top: 0, bottom: 0 });
   const addResultToList = useCallback((el: HTMLLIElement) => {
@@ -31,31 +31,6 @@ export default function SearchScreen({
   const removeResult = useCallback((el: HTMLLIElement) => {
     resultsListRef.current.splice(resultsListRef.current.indexOf(el), 1);
   }, []);
-
-  useEffect(() => {
-    const topResult = resultsListRef.current[0];
-    const bottomResult =
-      resultsListRef.current[resultsListRef.current.length - 1];
-    const centerPoint = getElCenterPoint(containerRef.current as HTMLElement);
-    const topBound = centerPoint - getElCenterPoint(topResult);
-    const bottomBound = centerPoint - getElCenterPoint(bottomResult);
-
-    scrollBoundRef.current = { top: topBound, bottom: bottomBound };
-    setActiveResult(resultsListRef.current[0]);
-
-    return () => {
-      resultsListRef.current = [];
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!activeResult) return;
-    scrollToElement(activeResult);
-    resultsListRef.current.forEach((el) => {
-      el.classList.remove('active-result');
-    });
-    activeResult.classList.add('active-result');
-  }, [activeResult]);
 
   function scrollToElement(el: HTMLElement) {
     setYPos((prev) => getDistanceFromCenter(el) + prev);
@@ -120,6 +95,39 @@ export default function SearchScreen({
     setYPos((prev) => prev + amount);
   }
 
+  useEffect(() => {
+    const topResult = resultsListRef.current[0];
+    const bottomResult =
+      resultsListRef.current[resultsListRef.current.length - 1];
+    const centerPoint = getElCenterPoint(containerRef.current as HTMLElement);
+    const topBound = centerPoint - getElCenterPoint(topResult);
+    const bottomBound = centerPoint - getElCenterPoint(bottomResult);
+
+    scrollBoundRef.current = { top: topBound, bottom: bottomBound };
+
+    const activeResultIndex = localStorage.getItem('activeResultIndex') ?? 0;
+    setActiveResult(resultsListRef.current[+activeResultIndex]);
+
+    return () => {
+      resultsListRef.current = [];
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!activeResult) return;
+    scrollToElement(activeResult);
+    resultsListRef.current.forEach((el) => {
+      el.classList.remove('active-result');
+    });
+    activeResult.classList.add('active-result');
+  }, [activeResult]);
+
+  useEffect(() => {
+    if (!activeResult) return;
+    const activeResultIndex = resultsListRef.current.indexOf(activeResult);
+    localStorage.setItem('activeResultIndex', activeResultIndex.toString());
+  }, [activeResult]);
+
   return (
     <animated.div
       style={transitionAnimation}
@@ -148,7 +156,9 @@ export default function SearchScreen({
               key={i}
               index={index}
               queries={queries}
-              setActiveResult={setActiveResult}
+              setActiveResult={(value: HTMLElement | null) =>
+                setActiveResult(value)
+              }
               onUnmount={removeResult}
               onMount={addResultToList}
               yPos={yPos}

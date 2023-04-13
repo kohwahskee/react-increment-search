@@ -64,6 +64,45 @@ export interface Options {
 
 export type QueriesMap = Map<number, { title: string; url: string }[]>;
 
-export type StorageQuery = {
+export type AppState = {
+  inputState: InputState;
+  inputValue: string;
+  optionShown: boolean;
+  generatedQueries: QueriesMap;
   searchQuery: SearchQuery;
+  options: Options;
 };
+
+export type AppStateAction =
+  | {
+      type: 'setInputState';
+      payload: { inputState: InputState } & Partial<AppState>;
+    }
+  | {
+      type: 'setInputValue';
+      payload: string;
+    }
+  | {
+      type: 'setOptionShown';
+      payload: boolean;
+    }
+  | {
+      type: 'setGeneratedQueries';
+      payload: QueriesMap;
+    }
+  | {
+      type: 'setSearchQuery';
+      payload: SearchQuery;
+    }
+  | {
+      type: 'setOptions';
+      payload: Partial<Options>;
+    }
+  | {
+      type: 'toggleOptionShown';
+    };
+export type StorageData = {
+  options?: Options;
+  searchQuery?: SearchQuery;
+  generatedQueries?: { [index: number]: { title: string; url: string }[] };
+} | null;
