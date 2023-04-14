@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
+import { AppStateAction } from '../../Utils/TypesExport';
 
 export default function useOptionShortcut(
   isShown: boolean,
-  setFn: (value: boolean) => void
+  dispatcher: React.Dispatch<AppStateAction>
 ) {
   // Update generated queries when options change
   useEffect(() => {
@@ -12,12 +13,12 @@ export default function useOptionShortcut(
 
     function keyDownHandler(e: KeyboardEvent) {
       if (e.key === 'Escape') {
-        setFn(false);
+        dispatcher({ type: 'setOptionShown', payload: false });
       }
     }
 
     return () => {
       document.removeEventListener('keydown', keyDownHandler);
     };
-  }, [isShown, setFn]);
+  }, [dispatcher, isShown]);
 }

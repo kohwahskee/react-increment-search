@@ -1,6 +1,6 @@
 import './style.scss';
-import { SpringValue, animated } from '@react-spring/web';
-import { WheelEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { SpringValue, animated, useSpring } from '@react-spring/web';
+import { WheelEvent, useEffect, useRef, useState } from 'react';
 import SearchResult from './SearchResults/SearchResult';
 
 type QueriesMap = Map<number, { title: string; url: string }[]>;
@@ -22,38 +22,22 @@ export default function SearchScreen({
 
   const [yPos, setYPos] = useState(0);
   const [activeResult, setActiveResult] = useState<HTMLElement | null>(null);
+
   const resultsListRef = useRef<HTMLElement[]>([]);
   const containerRef = useRef<HTMLUListElement>(null);
-  const scrollBoundRef = useRef({ top: 0, bottom: 0 });
-  const addResultToList = useCallback((el: HTMLLIElement) => {
-    resultsListRef.current.push(el);
-  }, []);
-  const removeResult = useCallback((el: HTMLLIElement) => {
-    resultsListRef.current.splice(resultsListRef.current.indexOf(el), 1);
-  }, []);
 
-  function scrollToElement(el: HTMLElement) {
-    setYPos((prev) => getDistanceFromCenter(el) + prev);
-  }
+  const scrollYAnimation = useSpring({
+    to: { y: yPos },
+    config: {
+      round: 1,
+    },
+    onChange: () => {
+      scrollToBound();
+    },
+  });
 
   function onScrollHandler(e: WheelEvent) {
-    const [topBound, bottomBound] = [
-      scrollBoundRef.current.top,
-      scrollBoundRef.current.bottom,
-    ];
-
-    // If scrolling up and goes past top bound -> scroll to top
-    if (e.deltaY < 0 && yPos + SCROLL_AMOUNT >= topBound) {
-      scrollBy(topBound - yPos);
-    }
-    // If scrolling down and goes past bottom bound -> scroll to bottom
-    else if (e.deltaY > 0 && yPos - SCROLL_AMOUNT <= bottomBound) {
-      scrollBy(bottomBound - yPos);
-    }
-    // Otherwise scroll normally
-    else {
-      scrollBy(e.deltaY < 0 ? SCROLL_AMOUNT : -SCROLL_AMOUNT);
-    }
+    scrollBy(e.deltaY < 0 ? SCROLL_AMOUNT : -SCROLL_AMOUNT);
   }
 
   function mouseDownHandler() {
@@ -68,25 +52,24 @@ export default function SearchScreen({
   function mouseUpHandler() {
     document.removeEventListener('mousemove', mouseMoveHandler);
     document.removeEventListener('mouseup', mouseUpHandler);
+  }
 
-    scrollToBound();
+  function scrollToElement(el: HTMLElement) {
+    setYPos(getDistanceFromCenter(el));
   }
 
   function scrollToBound() {
-    if (!resultsListRef.current.length || !containerRef.current) return;
+    if (!containerRef.current?.parentElement) return;
 
-    const topResult = resultsListRef.current[0];
-    const bottomResult =
-      resultsListRef.current[resultsListRef.current.length - 1];
-    const centerPoint = getElCenterPoint(containerRef.current);
+    const { top, bottom } = containerRef.current.getBoundingClientRect();
+    const centerPoint = getElCenterPoint(containerRef.current.parentElement);
 
-    const topBound = centerPoint - getElCenterPoint(topResult);
-    const bottomBound = centerPoint - getElCenterPoint(bottomResult);
-
-    if (topBound < 0) {
-      scrollToElement(topResult);
-    } else if (bottomBound > 0) {
-      scrollToElement(bottomResult);
+    if (top > centerPoint) {
+      scrollToElement(resultsListRef.current[0]);
+    } else if (bottom < centerPoint) {
+      scrollToElement(
+        resultsListRef.current[resultsListRef.current.length - 1]
+      );
     }
   }
 
@@ -95,16 +78,33 @@ export default function SearchScreen({
     setYPos((prev) => prev + amount);
   }
 
+  function generateSearchResults() {
+    const addResultToList = (el: HTMLLIElement) => {
+      resultsListRef.current.push(el);
+    };
+
+    const removeResult = (el: HTMLLIElement) => {
+      resultsListRef.current.splice(resultsListRef.current.indexOf(el), 1);
+    };
+
+    const queriesToUse =
+      generatedQueries.size === 0 ? placeholderMap : generatedQueries;
+
+    return Array.from(queriesToUse).map(([index, queries], i) => (
+      <SearchResult
+        // eslint-disable-next-line react/no-array-index-key
+        key={i}
+        index={index}
+        queries={queries}
+        setActiveResult={(value: HTMLElement | null) => setActiveResult(value)}
+        onUnmount={removeResult}
+        onMount={addResultToList}
+        scrollYSpring={scrollYAnimation.y}
+      />
+    ));
+  }
+
   useEffect(() => {
-    const topResult = resultsListRef.current[0];
-    const bottomResult =
-      resultsListRef.current[resultsListRef.current.length - 1];
-    const centerPoint = getElCenterPoint(containerRef.current as HTMLElement);
-    const topBound = centerPoint - getElCenterPoint(topResult);
-    const bottomBound = centerPoint - getElCenterPoint(bottomResult);
-
-    scrollBoundRef.current = { top: topBound, bottom: bottomBound };
-
     const activeResultIndex = localStorage.getItem('activeResultIndex') ?? 0;
     setActiveResult(resultsListRef.current[+activeResultIndex]);
 
@@ -145,27 +145,13 @@ export default function SearchScreen({
           !activeResult ? 'selecting' : ''
         }`}
       />
-      <ul ref={containerRef} className="search-results-wrapper">
-        {(() => {
-          const queriesToUse =
-            generatedQueries.size === 0 ? placeholderMap : generatedQueries;
-
-          return Array.from(queriesToUse).map(([index, queries], i) => (
-            <SearchResult
-              // eslint-disable-next-line react/no-array-index-key
-              key={i}
-              index={index}
-              queries={queries}
-              setActiveResult={(value: HTMLElement | null) =>
-                setActiveResult(value)
-              }
-              onUnmount={removeResult}
-              onMount={addResultToList}
-              yPos={yPos}
-            />
-          ));
-        })()}
-      </ul>
+      <animated.ul
+        style={scrollYAnimation}
+        ref={containerRef}
+        className="search-results-wrapper"
+      >
+        {generateSearchResults()}
+      </animated.ul>
     </animated.div>
   );
 }

@@ -1,12 +1,14 @@
 import { useReducer } from 'react';
-import { AppState, AppStateAction } from '../Utils/TypesExport';
+import { AppState, AppStateAction } from '../../Utils/TypesExport';
 
-function appStateReducer(state: AppState, action: AppStateAction) {
+function appStateReducer(state: AppState, action: AppStateAction): AppState {
   switch (action.type) {
     case 'setInputState':
       return {
         ...state,
         ...action.payload,
+        optionShown:
+          action.payload.inputState === 'FINISHED' ? false : state.optionShown,
         inputState: action.payload.inputState,
       };
     case 'setInputValue':

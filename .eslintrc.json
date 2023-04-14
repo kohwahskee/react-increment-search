@@ -78,6 +78,7 @@
         "ignoreDeclarationSort": true
       }
     ],
+    "prettier/prettier": "warn",
     "no-param-reassign": ["error", { "props": false }],
     "padding-line-between-statements": [
       "warn",

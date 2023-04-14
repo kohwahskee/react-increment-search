@@ -141,3 +141,32 @@ export function getFromLocalStorage(key: string) {
 
   return null;
 }
+
+export function getPlaceholderMap(
+  numberOfSearches: number,
+  resultsPerSearch: number
+) {
+  const tempMap: QueriesMap = new Map();
+
+  for (let i = 0; i < numberOfSearches; i++) {
+    const queries = [];
+
+    for (let j = 0; j < resultsPerSearch; j++) {
+      queries.push({ title: getRandomTitle(), url: '' });
+    }
+
+    tempMap.set(i, queries);
+  }
+
+  return tempMap;
+}
+
+export function getMapFromObject(obj: object) {
+  const map = new Map();
+
+  Object.entries(obj).forEach(([key, value]) => {
+    map.set(Number(key), value);
+  });
+
+  return map;
+}

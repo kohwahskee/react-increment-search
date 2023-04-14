@@ -3,7 +3,7 @@ TODO:
   ✔ If previous query === new query, don't fetch again @done(23-04-06 20:40)
   ✔ Correctly adding the number of results per search to generated queries @done(23-04-06 20:40)
   When query has no incrementable, either:
-    - Only show 1 result (both generatedQueries and placeholder) or 
+    ✘ Only show 1 result (both generatedQueries and placeholder) or @cancelled(23-04-13 21:18)
     ✔ Don't show show any at all (input state doesn't change to FINISHED) @done(23-04-06 20:40)
   Set a scroll boundary to prevent over-scrolling:
       ✔ Scroll back to bound when mouseup @done(23-04-06 20:40)
@@ -18,15 +18,21 @@ TODO:
   ✘ When search query === last query but `generatedQueries` is empty, fetch again @cancelled(23-04-07 01:18)
   ✘ Handle placeholder map inside `SearchScreen.tsx` (instead of `App.tsx`); @cancelled(23-04-06 20:45) (cancelled because it's better to handle error right where data is fetched) 
   ✔ Custom error message for 429. @done(23-04-06 20:45)
-  ☐ When fetch is ready and working, replace mock API with real Google API
-  ☐ Abstract `useEffects` in `App.tsx` to custom hooks @started(23-04-07 01:19)
+  ☐ When fetch is ready and working, replace mock API with real Google API @high
+  ✔ Abstract `useEffects` in `App.tsx` to custom hooks @started(23-04-13 21:25) @done(23-04-13 22:04) @lasted(39m46s)
   ✔ Store last active result and options in `localStorage` @started(23-04-11 21:30) @done(23-04-12 18:57) @lasted(21h27m39s)
     To do so, store the index of the result instead of the result element itself
-  ☐ Abstract placeholder map into helper function @low
-  ☐ Add `<title>` for result links. 
+  ✔ Abstract placeholder map into helper function @low @done(23-04-13 21:23)
+  ✔ Add `<title>` for result links. @done(23-04-13 21:20)
+  ☐ Write a README.md maybe? @med
 
+  
 FIXME:
-  ☐ Since placeholder is now handled in SearchScreen, it won't be ready immediately after `inputState` is switch to `FINISHED`. This causes `scrollBound` to be set incorrectly. @started(23-04-12 21:19)
+  ✔ Since placeholder is now handled in SearchScreen, it won't be ready immediately after `inputState` is switch to `FINISHED`. This causes `scrollBound` to be set incorrectly. @started(23-04-12 21:19) @done(23-04-13 21:17) @lasted(23h58m27s)
+    Possilbe Solution: 
+      ✘ Give individual `SearchResult` access to setting `scrollY` and thus, `scrollBound` is calculated in `SearchResult` instead of `SearchScreen` (Possible performance issue) @started(23-04-13 16:54) @cancelled(23-04-13 21:14) @wasted(4h20m7s) (Reason: `SearchResult` becomes to dependant on `SearchScreen`'s state. Also causes perfoamnce issue as each `SearchResult` will have to scroll and animate on its own)
+      Solution: 
+        ✔ Lift scrollYAnimation back up to SearchScreen. Scroll related animation will now be handled by `SearchScreen`. This implifies a lot of the problems, and also makes animation much smoother. @done(23-04-13 21:17)
   Generated Queries not set properly when retreiving from localStorage:
      Reason: placeholder map is set immediately on load and when options/inputState changes, causing conflict between placeholder map and generated queries
     ✔ ? Think of a better way to set placeholder map @done(23-04-12 17:51)
