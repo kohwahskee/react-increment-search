@@ -58,11 +58,9 @@ export async function getQueriesMap(
     const searchIndex = i + startingNumber;
     const searchQ = `${searchQuery.firstHalf} ${searchIndex} ${searchQuery.secondHalf}`;
     const num = 4;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const searchParams = `key=${API_KEY}&cx=${ENGINE_KEY}&q=${searchQ}&num=${num}`;
-    // const searchURL = `https://www.googleapis.com/customsearch/v1?${searchParams}`;
+    const searchURL = `https://www.googleapis.com/customsearch/v1?${searchParams}`;
 
-    const searchURL = `http://localhost:3000/${searchQ}&${searchIndex}`;
     promiseMap.set(
       searchIndex,
       fetch(searchURL)

@@ -34,7 +34,7 @@ const initialAppState: AppState = {
     incrementable: NaN,
   },
   options: {
-    numberOfSearches: 100,
+    numberOfSearches: 10,
     startingNumber: 'selected',
     resultsPerSearch: 2,
   },

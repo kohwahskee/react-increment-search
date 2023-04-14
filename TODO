@@ -18,15 +18,15 @@ TODO:
   ✘ When search query === last query but `generatedQueries` is empty, fetch again @cancelled(23-04-07 01:18)
   ✘ Handle placeholder map inside `SearchScreen.tsx` (instead of `App.tsx`); @cancelled(23-04-06 20:45) (cancelled because it's better to handle error right where data is fetched) 
   ✔ Custom error message for 429. @done(23-04-06 20:45)
-  ☐ When fetch is ready and working, replace mock API with real Google API @high
+  ✔ When fetch is ready and working, replace mock API with real Google API @high @done(23-04-14 00:00)
   ✔ Abstract `useEffects` in `App.tsx` to custom hooks @started(23-04-13 21:25) @done(23-04-13 22:04) @lasted(39m46s)
   ✔ Store last active result and options in `localStorage` @started(23-04-11 21:30) @done(23-04-12 18:57) @lasted(21h27m39s)
     To do so, store the index of the result instead of the result element itself
   ✔ Abstract placeholder map into helper function @low @done(23-04-13 21:23)
   ✔ Add `<title>` for result links. @done(23-04-13 21:20)
-  ☐ Write a README.md maybe? @med
+  ✔ Write a README.md maybe? @med @done(23-04-13 23:47)
 
-  
+
 FIXME:
   ✔ Since placeholder is now handled in SearchScreen, it won't be ready immediately after `inputState` is switch to `FINISHED`. This causes `scrollBound` to be set incorrectly. @started(23-04-12 21:19) @done(23-04-13 21:17) @lasted(23h58m27s)
     Possilbe Solution: 
