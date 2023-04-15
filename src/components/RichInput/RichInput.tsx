@@ -1,9 +1,13 @@
 import { animated } from '@react-spring/web';
-import { FormEvent, useCallback, useEffect, useRef } from 'react';
+import { FormEvent, useCallback, useRef } from 'react';
 import BubbleIndicator from './BubbleIndicator/BubbleIndicator';
+import { generateSpans } from './Helpers';
+import useDynamicContainerHeight from './hooks/useDynamicContainerHeight';
+import useInputShortcutHandler from './hooks/useInputShortcutHandler';
+import useInputStateHandler from './hooks/useInputStateHandler';
 import useInputAnimation from './useInputAnimation';
 import './style.scss';
-import { InputState } from '../Utils/TypesExport';
+import { InputState, StorageData } from '../Utils/TypesExport';
 
 interface SearchQuery {
   firstHalf: string;
@@ -15,167 +19,6 @@ interface Props {
   inputValue: [string, (value: string) => void];
   inputState: [InputState, (state: InputState) => void];
   setSearchQuery: (query: SearchQuery) => void;
-}
-
-function parseSearchQuery(
-  currentSpan: HTMLSpanElement | null,
-  spanList: HTMLSpanElement[]
-) {
-  let firstHalf = '';
-  let secondHalf = '';
-  const incrementable = parseInt(currentSpan?.innerText || '', 10);
-  let flip = false;
-  spanList.forEach((span) => {
-    if (span === currentSpan) {
-      flip = true;
-      return;
-    }
-
-    if (!flip) {
-      firstHalf += span.innerText;
-    } else {
-      secondHalf += span.innerText;
-    }
-  });
-  return {
-    firstHalf,
-    secondHalf,
-    incrementable,
-  };
-}
-
-function useDynamicContainerHeight(
-  containerRef: React.MutableRefObject<HTMLDivElement | null>,
-  inputRef: React.MutableRefObject<HTMLDivElement | null>,
-  inputValue: string
-) {
-  useEffect(() => {
-    if (!containerRef.current || !inputRef.current) return;
-    containerRef.current.style.height = `${inputRef.current.offsetHeight}px`;
-  }, [containerRef, inputRef, inputValue]);
-}
-
-function useInputShortcutHandler(
-  inputState: InputState,
-  setInputState: (state: InputState) => void,
-  inputValue: string,
-  selectedSpanRef: React.MutableRefObject<HTMLSpanElement | null>,
-  inputValueSpans: React.MutableRefObject<HTMLSpanElement[]>,
-  tempInputValue: React.MutableRefObject<string | null>,
-  setSearchQuery: (query: SearchQuery) => void,
-  numberInputSpans: React.MutableRefObject<HTMLSpanElement[]>
-) {
-  // Keyboard shortcuts
-  useEffect(() => {
-    document.addEventListener('keydown', keyDownHandler);
-
-    function keyDownHandler(e: KeyboardEvent) {
-      switch (e.key) {
-        case '/': {
-          e.preventDefault();
-          setInputState('TYPING');
-          break;
-        }
-
-        case 'Enter': {
-          if (
-            inputState === 'SELECTING' &&
-            inputValue !== '' &&
-            numberInputSpans.current.length > 0
-          ) {
-            tempInputValue.current = inputValue;
-            setInputState('FINISHED');
-            setSearchQuery(
-              parseSearchQuery(selectedSpanRef.current, inputValueSpans.current)
-            );
-          }
-
-          break;
-        }
-
-        default:
-          break;
-      }
-    }
-
-    return () => {
-      document.removeEventListener('keydown', keyDownHandler);
-    };
-  }, [
-    inputState,
-    inputValue,
-    inputValueSpans,
-    numberInputSpans,
-    selectedSpanRef,
-    setInputState,
-    setSearchQuery,
-    tempInputValue,
-  ]);
-}
-
-function useInputStateHandler(
-  inputState: InputState,
-  setInputValue: (value: string) => void,
-  inputValue: string,
-  inputRef: React.MutableRefObject<HTMLDivElement | null>,
-  selectedSpanRef: React.MutableRefObject<HTMLSpanElement | null>,
-  inputValueSpans: React.MutableRefObject<HTMLSpanElement[]>,
-  tempInputValue: React.MutableRefObject<string | null>
-) {
-  // Handle input state change
-  useEffect(() => {
-    switch (inputState) {
-      case 'TYPING':
-        inputTypingHandler();
-        break;
-      case 'SELECTING':
-        inputSelectingHandler();
-        break;
-      case 'FINISHED':
-        inputFinishedHandler();
-        break;
-      default:
-        break;
-    }
-
-    function inputFinishedHandler() {
-      const searchQuery = parseSearchQuery(
-        selectedSpanRef.current,
-        inputValueSpans.current
-      );
-      const STRING_LENGTH_LIMIT = 25;
-      const shortenedString = shortenQuery(searchQuery, STRING_LENGTH_LIMIT);
-
-      // tempInputValue.current = inputValue;
-
-      if (inputValue.length > STRING_LENGTH_LIMIT) {
-        setInputValue(shortenedString);
-        (inputRef.current as HTMLDivElement).innerText = shortenedString;
-      }
-    }
-
-    function inputTypingHandler() {
-      inputRef.current?.focus();
-
-      if (tempInputValue.current !== null) {
-        setInputValue(tempInputValue.current);
-        (inputRef.current as HTMLDivElement).innerText = tempInputValue.current;
-        tempInputValue.current = null;
-      }
-    }
-
-    function inputSelectingHandler() {
-      inputRef.current?.blur();
-    }
-  }, [
-    inputRef,
-    inputState,
-    inputValue,
-    inputValueSpans,
-    selectedSpanRef,
-    setInputValue,
-    tempInputValue,
-  ]);
 }
 
 export default function RichInput({
@@ -195,13 +38,10 @@ export default function RichInput({
 
   const tempInputValue = useRef<string | null>(
     (() => {
-      const queryFromStorage = localStorage.getItem('lastQuery');
-      if (queryFromStorage === null) return null;
-      const parsedQueryFromStorage = JSON.parse(
-        queryFromStorage
-      ) as SearchQuery;
-      const { firstHalf, secondHalf, incrementable } = parsedQueryFromStorage;
-
+      const data = localStorage.getItem('data');
+      const parsedData = data ? (JSON.parse(data) as StorageData) : null;
+      if (!parsedData?.searchQuery) return null;
+      const { firstHalf, secondHalf, incrementable } = parsedData.searchQuery;
       return `${firstHalf}${incrementable}${secondHalf}`;
     })()
   );
@@ -237,7 +77,7 @@ export default function RichInput({
     document.execCommand('insertText', false, plainText);
   }, []);
 
-  const inputEnterHandler = useCallback(
+  const keyDownHandler = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Enter') {
         e.stopPropagation();
@@ -246,6 +86,11 @@ export default function RichInput({
         if (inputState === 'TYPING') {
           setInputState('SELECTING');
         }
+      }
+
+      // Makes '/' key a valid input (was used as shortcut to switch to 'TYPING')
+      if (e.key === '/') {
+        e.stopPropagation();
       }
     },
     [inputState, setInputState]
@@ -322,7 +167,7 @@ export default function RichInput({
           style={{ width: DEFAULT_WIDTH }}
           ref={inputRef}
           onInput={onInputHandler}
-          onKeyDown={inputEnterHandler}
+          onKeyDown={keyDownHandler}
           onBlur={() => setInputState('SELECTING')}
           onFocus={() => {
             setInputState('TYPING');
@@ -352,49 +197,4 @@ function putCaretAtEnd(el: HTMLElement) {
   range.collapse(false);
   selection?.removeAllRanges();
   selection?.addRange(range);
-}
-
-function shortenQuery(query: SearchQuery, limit: number) {
-  let shortenedString: string;
-
-  if (Number.isNaN(query.incrementable)) {
-    shortenedString = `${query.firstHalf.slice(0, limit)}...`;
-  } else {
-    const firstHalf = query.firstHalf.slice(0, limit / 2);
-    const secondHalf = query.secondHalf.slice((limit / 2) * -1);
-    const { incrementable } = query;
-    shortenedString = `${firstHalf}...${incrementable}${
-      query.secondHalf.length > limit / 2 ? '...' : ''
-    } ${secondHalf}`;
-  }
-
-  return shortenedString;
-}
-
-function generateSpans(
-  inputSpansRef: React.MutableRefObject<HTMLSpanElement[]>,
-  numberSpansRef: React.MutableRefObject<HTMLSpanElement[]>,
-  inputValue: string,
-  inputState: InputState
-) {
-  if (inputValue === '') return null;
-  const spans = inputValue.match(/\s+|\S+/g)?.map((word, index) => {
-    const isNumber = word.match(/^\s*\d+\s*$/g)?.length === 1;
-    return (
-      <span
-        ref={(el) => {
-          if (!el) return;
-          inputSpansRef.current.push(el);
-          if (isNumber) numberSpansRef.current.push(el);
-        }}
-        data-isnumber={isNumber}
-        className={`text-span ${inputState === 'SELECTING' ? 'selecting' : ''}`}
-        // eslint-disable-next-line react/no-array-index-key
-        key={`${word}-${index}`}
-      >
-        {`${word}`}
-      </span>
-    );
-  });
-  return spans;
 }
