@@ -1,4 +1,4 @@
-# **Google Increment Search Tool (GIST)**
+# **[Google Increment Search Tool (GIST)](https://kohwahskee.github.io/react-increment-search/)**
 
 ### A search tool (powered by Google) that helps you search for incrementing numbers without having to search for them one by one.
 
@@ -8,6 +8,7 @@
 
 - [Why Gist?](#why-gist)
 - [How to use](#how-to-use)
+- [Search Operators](#search-operators)
 - [Options](#options)
 - [Results and bookmarking](#results-and-bookmarking)
 - [Please read](#please-read)
@@ -54,6 +55,8 @@ Since GIST is powered by Google, any search operators that would work in Google 
 
 [and more...](https://support.google.com/websearch/answer/2466433?hl=en)
 
+`⚠️Warning`: _GIST does not support auto-correct like Google does (i.e: 'Bradking baad ep 1' will not auto-correct to 'Breaking bad episode 1'). In most cases, Google should still understand correctly, but keep in mind that, this might cause error in case that Google does not understand and responds with 0 result_
+
 ---
 
 ## **Options**
@@ -76,13 +79,13 @@ The amount of searches GIST will show
 
 Example Options and how they affect the results:
 
-- `Number of searches`: 3
+⚙️ `Number of searches`: 3
 
-- `Starting number`: 1
+⚙️ `Starting number`: 1
 
-- `Results per search`: 2
+⚙️ `Results per search`: 2
 
-- `Search Query`: Breaking bad episode 3
+`Search Query`: Breaking bad episode 3
 
 Results will look something like this:
 
