@@ -25,9 +25,15 @@ TODO:
   ✔ Abstract placeholder map into helper function @low @done(23-04-13 21:23)
   ✔ Add `<title>` for result links. @done(23-04-13 21:20)
   ✔ Write a README.md maybe? @med @done(23-04-13 23:47)
+  ✔ Add a favicon @low @done(23-04-14 19:29)
+  ✔ Put custom hooks in `RichInput` into a separate file @done(23-04-14 19:29)
 
 
 FIXME:
+  ✔ numberInputSpans empty on load @high (Also fixed itself?????) @done(23-04-14 03:58)
+  ✔ Can't type `/` when typing @done(23-04-14 19:35)
+  ✘ Google API only fetches some and returns 403 for some when fetching from Github Page ?????? what ??????? @cancelled(23-04-14 03:02) (Fixed itself? Maybe Google API Console didn't update properly then?) 
+  ✔ tempInputValue not set properly when retrieved from localStorage @done(23-04-14 03:40)
   ✔ Since placeholder is now handled in SearchScreen, it won't be ready immediately after `inputState` is switch to `FINISHED`. This causes `scrollBound` to be set incorrectly. @started(23-04-12 21:19) @done(23-04-13 21:17) @lasted(23h58m27s)
     Possilbe Solution: 
       ✘ Give individual `SearchResult` access to setting `scrollY` and thus, `scrollBound` is calculated in `SearchResult` instead of `SearchScreen` (Possible performance issue) @started(23-04-13 16:54) @cancelled(23-04-13 21:14) @wasted(4h20m7s) (Reason: `SearchResult` becomes to dependant on `SearchScreen`'s state. Also causes perfoamnce issue as each `SearchResult` will have to scroll and animate on its own)
