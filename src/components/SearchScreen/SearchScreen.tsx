@@ -29,7 +29,7 @@ export default function SearchScreen({
   const scrollYAnimation = useSpring({
     to: { y: yPos },
     config: {
-      round: 1,
+      // round: 1,
     },
     onChange: () => {
       scrollToBound();
@@ -99,7 +99,7 @@ export default function SearchScreen({
         setActiveResult={(value: HTMLElement | null) => setActiveResult(value)}
         onUnmount={removeResult}
         onMount={addResultToList}
-        scrollYSpring={scrollYAnimation.y}
+        scrollSpring={scrollYAnimation.y}
       />
     ));
   }

@@ -30,6 +30,8 @@ TODO:
 
 
 FIXME:
+  ✔ New `searchQuery` should reset `activeResultIndex` to 0 @done(23-04-21 01:37)
+  ✔ Possible unnessary re-renderings after lastest commit (laggy scroll animation on Firefox) @done(23-04-21 01:34) (fixed, but not because of re-renderings)
   ✔ numberInputSpans empty on load @high (Also fixed itself?????) @done(23-04-14 03:58)
   ✔ Can't type `/` when typing @done(23-04-14 19:35)
   ✘ Google API only fetches some and returns 403 for some when fetching from Github Page ?????? what ??????? @cancelled(23-04-14 03:02) (Fixed itself? Maybe Google API Console didn't update properly then?) 
@@ -51,5 +53,6 @@ FIXME:
   ✔ Changing options without changing query won't change result items. @done(23-04-06 20:46)
 
 
-@critical ** IMPORTANT **:
+@critical ** IMPORTANT NOTE **:
 When animating, especially with transform animation, round the value to nearest 1 to prevent laggy animation in Firefox
+Again, Firefox has severe problem with interpolating decimals. This happened the 2nd time when `scrollAnimation` spring is lifted to `SearchScreen` and `SearchResult` is no longer responsible for animating its own scroll. This caused the animation to be laggy again. But this time, rounding the scroll value to nearest 1 inside `SearchScreen` did not fix the issue (this can be seen when toggling off scale animation, as scrolling animation was not the one that was laggy). This was fixed by rounding the `scale` value inside of `SearchResult` instead.

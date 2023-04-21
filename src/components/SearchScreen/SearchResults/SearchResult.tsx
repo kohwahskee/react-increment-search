@@ -1,6 +1,7 @@
 import { SpringValue, animated } from '@react-spring/web';
 import { useEffect, useRef } from 'react';
 import './style.scss';
+import { clamp, getDistanceFromCenter } from '../Helpers';
 
 interface Props {
   queries: {
@@ -11,7 +12,7 @@ interface Props {
   setActiveResult: (el: HTMLLIElement | null) => void;
   onMount: (el: HTMLLIElement) => void;
   onUnmount: (el: HTMLLIElement) => void;
-  scrollYSpring: SpringValue<number>;
+  scrollSpring: SpringValue<number>;
 }
 
 export default function SearchResult({
@@ -20,7 +21,7 @@ export default function SearchResult({
   queries,
   onMount: addResultToList,
   onUnmount: removeResult,
-  scrollYSpring,
+  scrollSpring,
 }: Props) {
   const searchResultRef = useRef<HTMLLIElement>(null);
   const parentRectRef = useRef<DOMRect>();
@@ -44,50 +45,32 @@ export default function SearchResult({
     <animated.li
       ref={searchResultRef}
       className="search-result"
-      style={{
-        scale: scrollYSpring.to(() => {
-          if (
-            !parentRectRef.current ||
-            !searchResultRef.current?.parentElement?.parentElement
-          )
-            return 1;
+      style={(() => {
+        if (!searchResultRef.current?.parentElement?.parentElement) return {};
 
-          if (
-            !isElInView(
-              searchResultRef.current.parentElement.parentElement,
-              searchResultRef.current
-            )
-          )
-            return 0.1;
-          const distanceFromCenter = getDistanceFromCenter(
-            searchResultRef.current,
-            parentRectRef.current
-          );
-
-          return clamp(1 - (0.003 * distanceFromCenter) ** 2, 0.1, 1);
-        }),
-
-        opacity: scrollYSpring.to(() => {
-          if (
-            !searchResultRef.current?.parentElement?.parentElement ||
-            !parentRectRef.current
-          )
-            return 1;
-          if (
-            !isElInView(
-              searchResultRef.current.parentElement.parentElement,
-              searchResultRef.current
-            )
-          )
-            return 0.1;
-          const distanceFromCenter = getDistanceFromCenter(
-            searchResultRef.current,
-            parentRectRef.current
-          );
-
-          return clamp(1 - (0.003 * distanceFromCenter) ** 1.7, 0, 1);
-        }),
-      }}
+        const el = searchResultRef.current;
+        const parentEl = searchResultRef.current.parentElement.parentElement;
+        return {
+          scale: scrollSpring.to(() => {
+            const distanceFromCenter = getDistanceFromCenter(el, parentEl);
+            const newTransformProp = clamp(
+              1 - (0.003 * distanceFromCenter) ** 2,
+              0.1,
+              1
+            );
+            return Math.round(newTransformProp * 100) / 100;
+          }),
+          opacity: scrollSpring.to(() => {
+            const distanceFromCenter = getDistanceFromCenter(el, parentEl);
+            const newTransformProp = clamp(
+              1 - (0.003 * distanceFromCenter) ** 2,
+              0.1,
+              1
+            );
+            return Math.round(newTransformProp * 100) / 100;
+          }),
+        };
+      })()}
       onClick={() => setActiveResult(searchResultRef.current)}
     >
       <div className="search-result-content">
@@ -117,22 +100,4 @@ export default function SearchResult({
       </div>
     </animated.li>
   );
-}
-
-function getDistanceFromCenter(el: HTMLElement, parentRect: DOMRect) {
-  const elRect = el.getBoundingClientRect();
-  const centerPoint = parentRect.top + parentRect.height / 2;
-  const elCenterPoint = elRect.top + elRect.height / 2;
-  return Math.abs(centerPoint - elCenterPoint);
-}
-
-function clamp(num: number, min: number, max: number) {
-  return Math.min(Math.max(num, min), max);
-}
-
-function isElInView(parentEl: HTMLElement, el: HTMLElement) {
-  const elRect = el.getBoundingClientRect();
-  const { top, bottom } = parentEl.getBoundingClientRect();
-  const { top: elTop, bottom: elBottom } = elRect;
-  return elTop >= top && elBottom <= bottom;
 }
