@@ -55,7 +55,7 @@ Since GIST is powered by Google, any search operators that would work in Google 
 
 [and more...](https://support.google.com/websearch/answer/2466433?hl=en)
 
-`⚠️Warning`: _GIST does not support auto-correct like Google does (i.e: 'Bradking baad ep 1' will not auto-correct to 'Breaking bad episode 1'). In most cases, Google should still understand correctly, but keep in mind that, this might cause error in case that Google does not understand and responds with 0 result_
+`⚠️Warning`: _Unlike Google, GIST does not support auto-correct (i.e: 'Bradking baad ep 1' will not auto-correct to 'Breaking bad episode 1'). In most cases, Google should still understand correctly, but keep in mind that, this might cause error in case that Google does not understand and responds with 0 result_
 
 ---
 
