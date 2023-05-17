@@ -41,6 +41,7 @@ export default function BubbleIndicator({
           friction: 15,
         };
       }
+
       return { easing: easings.easeOutBack, duration: 200 };
     },
   });
@@ -87,6 +88,7 @@ export default function BubbleIndicator({
     numberInputSpans.forEach((span) => {
       const spanRect = span.getBoundingClientRect();
       const BOUND_THRESHOLD = 0; // in pixels
+
       if (
         bubbleCenter.x > spanRect.left - BOUND_THRESHOLD &&
         bubbleCenter.x < spanRect.right + BOUND_THRESHOLD &&

@@ -188,7 +188,9 @@ function App() {
         }
       />
 
-      {inputState !== 'FINISHED' && <ShortcutHelpers inputState={inputState} />}
+      {inputState !== 'FINISHED' && (
+        <ShortcutHelpers inputValue={inputValue} inputState={inputState} />
+      )}
 
       {searchScreenTransition(
         (style, show) =>
